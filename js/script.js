@@ -124,6 +124,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Projects Filter Logic
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const projectCards = document.querySelectorAll('.project-card');
+
+    if (filterBtns.length > 0 && projectCards.length > 0) {
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Set active class
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filterValue = btn.getAttribute('data-filter');
+
+                projectCards.forEach(card => {
+                    const category = card.getAttribute('data-category');
+                    card.classList.remove('fade-in');
+
+                    if (filterValue === 'all' || category === filterValue) {
+                        card.classList.remove('hidden-project');
+                        // Trigger reflow to restart animation
+                        void card.offsetWidth;
+                        card.classList.add('fade-in');
+                    } else {
+                        card.classList.add('hidden-project');
+                    }
+                });
+            });
+        });
+    }
+
     // Back to Top functionality
     const backToTopBtn = document.getElementById('backToTop');
     const scrollIndicator = document.querySelector('.scroll-indicator');
@@ -137,21 +167,65 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Custom Toast Notification System
+    window.showToast = function(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
 
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+
+        toast.innerHTML = `
+            <i class="fas ${icon} toast-icon"></i>
+            <div class="toast-content">
+                <span class="toast-title">${type}</span>
+                <span class="toast-message">${message}</span>
+            </div>
+            <button class="toast-close" aria-label="Close">&times;</button>
+        `;
+
+        container.appendChild(toast);
+
+        // Force a reflow to trigger transition
+        void toast.offsetWidth;
+        toast.classList.add('show');
+
+        const autoDismiss = setTimeout(() => {
+            dismissToast(toast);
+        }, 4000);
+
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            clearTimeout(autoDismiss);
+            dismissToast(toast);
+        });
+    };
+
+    function dismissToast(toast) {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+        toast.addEventListener('transitionend', () => {
+            toast.remove();
+        });
+    }
 
     // Form Submission Handling
     const contactForm = document.querySelector('form');
     if (contactForm) {
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            // In a real scenario, you'd use fetch() to send data to a backend
             const submitBtn = contactForm.querySelector('button');
             const originalText = submitBtn.innerText;
             submitBtn.innerText = 'SENDING...';
             submitBtn.disabled = true;
 
             setTimeout(() => {
-                alert('Thank you, Surya has received your message!');
+                showToast('Thank you! Your message has been received successfully.', 'success');
                 submitBtn.innerText = originalText;
                 submitBtn.disabled = false;
                 contactForm.reset();

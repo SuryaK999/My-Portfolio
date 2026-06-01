@@ -35,11 +35,17 @@
             <div class="container">
                 <div class="works-content">
                     <h2>My Works</h2>
+                    <div class="project-filters">
+                        <span class="filter-btn active" data-filter="all">All</span>
+                        <span class="filter-btn" data-filter="web">Web Apps</span>
+                        <span class="filter-btn" data-filter="desktop">Desktop Apps</span>
+                        <span class="filter-btn" data-filter="python">Python/GUI</span>
+                    </div>
                     <div class="projects-slider-wrapper">
                         <button class="slider-arrow slider-prev" aria-label="Previous"><i
                                 class="fas fa-chevron-left"></i></button>
                         <div class="projects-slider" id="projectsSlider">
-                            <article class="project-card">
+                            <article class="project-card" data-category="web">
                                 <div class="project-header">
                                     <i class="fas fa-graduation-cap project-icon"></i>
                                     <a href="https://github.com/SuryaK999/Studix-Web-App" class="github-link" target="_blank"><i class="fab fa-github"></i></a>
@@ -53,7 +59,7 @@
                                     <span>MERN Stack</span><span>JavaScript</span><span>Socket.io</span><span>Redis</span>
                                 </div>
                             </article>
-                            <article class="project-card">
+                            <article class="project-card" data-category="desktop">
                                 <div class="project-header">
                                     <i class="fas fa-music project-icon"></i>
                                     <a href="https://github.com/SuryaK999/Mini-Music-Desktop-Player-" class="github-link" target="_blank"><i class="fab fa-github"></i></a>
@@ -68,7 +74,7 @@
                                     <span>Electron JS</span><span>JavaScript</span><span>CSS</span>
                                 </div>
                             </article>
-                            <article class="project-card">
+                            <article class="project-card" data-category="python">
                                 <div class="project-header">
                                     <i class="fas fa-calculator project-icon"></i>
                                     <a href="https://github.com/SuryaK999/Python-Calculator" class="github-link" target="_blank"><i class="fab fa-github"></i></a>
@@ -82,7 +88,7 @@
                                     <span>Python</span><span>Tkinter</span><span>GUI</span>
                                 </div>
                             </article>
-                            <article class="project-card">
+                            <article class="project-card" data-category="desktop">
                                 <div class="project-header">
                                     <i class="fas fa-stopwatch project-icon"></i>
                                     <a href="https://github.com/SuryaK999/Nimbus-Focus-App" class="github-link" target="_blank"><i class="fab fa-github"></i></a>
@@ -96,7 +102,7 @@
                                     <span>Tauri</span><span>Rust</span><span>TypeScript</span><span>Svelte 5</span><span>Tailwind CSS</span>
                                 </div>
                             </article>
-                            <article class="project-card">
+                            <article class="project-card" data-category="web">
                                 <div class="project-header">
                                     <i class="fas fa-tv project-icon"></i>
                                     <a href="https://github.com/SuryaK999/Apple-Tv-Web-Clone" class="github-link" target="_blank"><i class="fab fa-github"></i></a>
