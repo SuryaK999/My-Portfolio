@@ -74,9 +74,15 @@
                         <div class="eb-content">
                             <h3 class="form-title">Details</h3>
                             <form>
-                                <input type="text" placeholder="Identity / Name" class="form-field" required>
-                                <input type="email" placeholder="Email Address" class="form-field" required>
-                                <textarea rows="5" placeholder="Your Message" class="form-field" required></textarea>
+                                <!-- FormSubmit Configurations -->
+                                <input type="hidden" name="_subject" value="New Portfolio Message!">
+                                <input type="hidden" name="_template" value="box">
+                                <!-- Honeypot Anti-Spam Field -->
+                                <input type="text" name="_honey" style="display:none">
+
+                                <input type="text" name="name" placeholder="Identity / Name" class="form-field" required>
+                                <input type="email" name="email" placeholder="Email Address" class="form-field" required>
+                                <textarea name="message" rows="5" placeholder="Your Message" class="form-field" required></textarea>
                                 <button type="submit" class="btn-send">Send Message</button>
                             </form>
                         </div>

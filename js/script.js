@@ -224,12 +224,50 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerText = 'SENDING...';
             submitBtn.disabled = true;
 
-            setTimeout(() => {
-                showToast('Thank you! Your message has been received successfully.', 'success');
+            const formData = new FormData(contactForm);
+            
+            // Check honeypot field (anti-spam bot detection)
+            if (formData.get('_honey')) {
+                setTimeout(() => {
+                    showToast('Thank you! Your message has been received successfully.', 'success');
+                    submitBtn.innerText = originalText;
+                    submitBtn.disabled = false;
+                    contactForm.reset();
+                }, 1000);
+                return;
+            }
+
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            fetch('https://formsubmit.co/ajax/suryak93813040@gmail.com', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(res => {
+                showToast('Thank you! Your message has been sent successfully.', 'success');
+                contactForm.reset();
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+                showToast('Oops! Something went wrong. Please try again.', 'error');
+            })
+            .finally(() => {
                 submitBtn.innerText = originalText;
                 submitBtn.disabled = false;
-                contactForm.reset();
-            }, 1500);
+            });
         });
     }
 
