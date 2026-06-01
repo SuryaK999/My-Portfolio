@@ -1,25 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Page Entry Animation
-    document.body.classList.add('fade-in');
-
-    // Page Exit Animation for Internal Links
-    document.querySelectorAll('a').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            
-            // Check if it's an internal link
-            if (href && !href.startsWith('#') && !href.startsWith('mailto:') && !href.startsWith('tel:') && this.target !== '_blank') {
-                e.preventDefault();
-                document.body.classList.remove('fade-in');
-                
-                setTimeout(() => {
-                    window.location.href = href;
-                }, 500); // Matches CSS transition duration
-            }
-        });
-    });
-
 
     // Navbar Scroll Effect
     const header = document.querySelector('.header');
@@ -71,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, observerOptions);
 
-    document.querySelectorAll('.stat-card, .skill-icon-card, .project-card, .about-image, .about-content, .timeline-item, .section-wrapper h2, .contact-item, .contact-form-card, .skill-progress').forEach(el => {
+    document.querySelectorAll('.stat-card, .skill-icon-card, .project-card, .about-image, .about-content, .timeline-item').forEach(el => {
         flyInObserver.observe(el);
     });
 
@@ -90,22 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         });
-    });
-
-    // Observer for Progress Bars
-    const progressObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const bar = entry.target;
-                const width = bar.getAttribute('data-width');
-                bar.style.width = width;
-                progressObserver.unobserve(bar);
-            }
-        });
-    }, { threshold: 0.2 });
-
-    document.querySelectorAll('.progress-bar').forEach(bar => {
-        progressObserver.observe(bar);
     });
 
     // Skills Tab Switcher with Smooth Fade
@@ -286,26 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Mobile Menu Toggle
-    const menuToggle = document.getElementById('mobile-menu');
-    const navLinksContainer = document.querySelector('.nav-links');
-
-    if (menuToggle && navLinksContainer) {
-        menuToggle.addEventListener('click', () => {
-            menuToggle.classList.toggle('is-active');
-            navLinksContainer.classList.toggle('active');
-            document.body.classList.toggle('no-scroll'); // Prevent scrolling when menu is open
-        });
-
-        // Close menu when clicking a link
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                menuToggle.classList.remove('is-active');
-                navLinksContainer.classList.remove('active');
-                document.body.classList.remove('no-scroll');
-            });
-        });
-    }
-
     initMatrix();
+
 });

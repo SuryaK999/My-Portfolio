@@ -1,98 +1,73 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surya's Portfolio | Home</title>
-    <meta
-      name="description"
-      content="Professional student portfolio of Surya Prakash, a passionate developer specializing in Web Development, Python, and more."
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <meta name="description"
+        content="Professional student portfolio of Surya Prakash, a passionate developer specializing in Web Development, Python, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
+    <link rel="stylesheet" href="css/style.css">
+</head>
 
-  <body>
+<body>
     <header class="header">
-      <nav class="navbar container">
-        <a href="index.html" class="logo">Port<span>.</span>Folio</a>
-        <div class="menu-toggle" id="mobile-menu">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </div>
-        <ul class="nav-links">
-          <li><a href="index.html" class="nav-link active">Home</a></li>
-          <li><a href="about.html" class="nav-link">About</a></li>
-          <li><a href="skills.html" class="nav-link">Skills</a></li>
-          <li><a href="projects.html" class="nav-link">Projects</a></li>
-          <li><a href="contact.html" class="nav-link">Contact</a></li>
-        </ul>
-      </nav>
+        <nav class="navbar container">
+            <a href="index.html" class="logo">Port<span>.</span>Folio</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link active">Home</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li><a href="skills.html" class="nav-link">Skills</a></li>
+                <li><a href="projects.html" class="nav-link">Projects</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+            </ul>
+        </nav>
     </header>
     <main>
-      <!-- Home Section -->
-      <section id="home" class="hero-section">
-        <canvas id="matrixCanvas"></canvas>
-
-        <div class="hero-bg-graphic"></div>
-        <div class="hero-content container">
-          <h2 class="hero-subtitle" data-text="CODE | BUILD | LEARN">
-            CODE | BUILD | LEARN
-          </h2>
-          <div class="hero-avatar-container">
-            <div class="hero-avatar-border"></div>
-            <div class="avatar-lightning-overlay"></div>
-            <img
-              src="./assets/images/sakamoto.jpg"
-              class="hero-avatar"
-              alt="Surya"
-            />
-          </div>
-          <h1 class="hero-title" data-text="SURYA">SURYA</h1>
-          <a href="contact.html" class="btn-electric">GET IN TOUCH</a>
-        </div>
-      </section>
+        <!-- Home Section -->
+        <section id="home" class="hero-section">
+            <canvas id="matrixCanvas"></canvas>
+            <span class="vertical-label">WELCOME</span>
+            <div class="hero-bg-graphic"></div>
+            <div class="hero-content container">
+                <h2 class="hero-subtitle" data-text="CODE | BUILD | LEARN">CODE | BUILD | LEARN</h2>
+                <div class="hero-avatar-container">
+                    <div class="hero-avatar-border"></div>
+                    <div class="avatar-lightning-overlay"></div>
+                    <img src="./assets/images/sakamoto.jpg" class="hero-avatar" alt="Surya">
+                </div>
+                <h1 class="hero-title" data-text="SURYA">SURYA</h1>
+                <a href="contact.html" class="btn-electric">GET IN TOUCH</a>
+            </div>
+        </section>
     </main>
     <footer class="footer">
-      <div class="container footer-content">
-        <div class="footer-logo">
-          <a href="index.html" class="logo">Port<span>.</span>Folio</a>
-          <p class="footer-tagline">
-            Building the future through code and creativity.
-          </p>
-          <p class="copyright">
-            &copy; 2026 Surya Prakash. All Rights Reserved.
-          </p>
+        <div class="container footer-content">
+            <div class="footer-logo">
+                <a href="index.html" class="logo">Port<span>.</span>Folio</a>
+                <p class="footer-tagline">Building the future through code and creativity.</p>
+                <p class="copyright">&copy; 2026 Surya Prakash. All Rights Reserved.</p>
+            </div>
+            <button class="back-to-top" id="backToTop" aria-label="Back to Top">
+                <i class="fas fa-arrow-up"></i>
+            </button>
         </div>
-        <button class="back-to-top" id="backToTop" aria-label="Back to Top">
-          <i class="fas fa-arrow-up"></i>
-        </button>
-      </div>
     </footer>
 
-    <svg style="position: absolute; width: 0; height: 0">
-      <filter id="jagged">
-        <feTurbulence
-          type="fractalNoise"
-          baseFrequency="0.1"
-          numOctaves="4"
-          result="noise"
-        />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" />
-      </filter>
+    <svg style="position: absolute; width: 0; height: 0;">
+        <filter id="jagged">
+            <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="4" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" />
+        </filter>
     </svg>
 
     <script src="js/script.js"></script>
-  </body>
+</body>
+
 </html>
