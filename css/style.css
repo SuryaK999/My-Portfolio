@@ -2,7 +2,8 @@
     --bg-color: #0b0b0b;
     --section-bg: #111111;
     --primary-color: #00ff41;
-    --primary-dim: rgba(0, 255, 65, 0.1);
+    --primary-dim: rgba(0, 255, 65, 0.15);
+    --primary-glow: rgba(0, 255, 65, 0.4);
     --primary-hover: #00cc33;
     --text-white: #ffffff;
     --text-muted: #888888;
@@ -1871,7 +1872,7 @@ main.fade-in {
     font-size: 1.8rem;
     font-weight: 900;
     cursor: grab;
-    box-shadow: 0 0 25px rgba(0, 255, 65, 0.5), inset 0 0 10px rgba(0, 255, 65, 0.3);
+    box-shadow: 0 0 25px var(--primary-glow), inset 0 0 10px var(--primary-dim);
     z-index: 10001;
     user-select: none;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease, width 0.3s cubic-bezier(0.25, 1, 0.5, 1), height 0.3s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.3s cubic-bezier(0.25, 1, 0.5, 1), border 0.3s ease;
@@ -1888,9 +1889,9 @@ main.fade-in {
 }
 
 .terminal-bubble:hover {
-    box-shadow: 0 0 35px rgba(0, 255, 65, 0.8), inset 0 0 15px rgba(0, 255, 65, 0.4);
-    border-color: #00ff66;
-    color: #00ff66;
+    box-shadow: 0 0 35px var(--primary-glow), inset 0 0 15px var(--primary-dim);
+    border-color: var(--primary-hover);
+    color: var(--primary-hover);
 }
 
 .terminal-bubble.docked-left {
@@ -1900,7 +1901,7 @@ main.fade-in {
     height: 72px;
     border-radius: 0 14px 14px 0;
     border-left: none;
-    box-shadow: 5px 0 20px rgba(0, 255, 65, 0.4), inset -2px 0 8px rgba(0, 255, 65, 0.2);
+    box-shadow: 5px 0 20px var(--primary-glow), inset -2px 0 8px var(--primary-dim);
 }
 
 .terminal-bubble.docked-left.auto-hidden {
@@ -1918,7 +1919,7 @@ main.fade-in {
     height: 72px;
     border-radius: 14px 0 0 14px;
     border-right: none;
-    box-shadow: -5px 0 20px rgba(0, 255, 65, 0.4), inset 2px 0 8px rgba(0, 255, 65, 0.2);
+    box-shadow: -5px 0 20px var(--primary-glow), inset 2px 0 8px var(--primary-dim);
 }
 
 .terminal-bubble.docked-right.auto-hidden {

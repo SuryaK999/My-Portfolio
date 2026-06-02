@@ -10,17 +10,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyTheme(themeName) {
         const themes = {
-            'matrix': { color: '#00ff41', dim: 'rgba(0, 255, 65, 0.15)' },
-            'cyberpunk': { color: '#ff007f', dim: 'rgba(255, 0, 127, 0.15)' },
-            'amber': { color: '#ffb000', dim: 'rgba(255, 176, 0, 0.15)' },
-            'dracula': { color: '#bd93f9', dim: 'rgba(189, 147, 249, 0.15)' },
-            'red': { color: '#ff0000', dim: 'rgba(255, 0, 0, 0.15)' },
-            'blue': { color: '#00d2ff', dim: 'rgba(0, 210, 255, 0.15)' }
+            'matrix': { color: '#00ff41', dim: 'rgba(0, 255, 65, 0.15)', glow: 'rgba(0, 255, 65, 0.4)', hover: '#00cc33' },
+            'cyberpunk': { color: '#ff007f', dim: 'rgba(255, 0, 127, 0.15)', glow: 'rgba(255, 0, 127, 0.4)', hover: '#cc0066' },
+            'amber': { color: '#ffb000', dim: 'rgba(255, 176, 0, 0.15)', glow: 'rgba(255, 176, 0, 0.4)', hover: '#cc8d00' },
+            'dracula': { color: '#bd93f9', dim: 'rgba(189, 147, 249, 0.15)', glow: 'rgba(189, 147, 249, 0.4)', hover: '#9b66f7' },
+            'red': { color: '#ff0000', dim: 'rgba(255, 0, 0, 0.15)', glow: 'rgba(255, 0, 0, 0.4)', hover: '#cc0000' },
+            'blue': { color: '#00d2ff', dim: 'rgba(0, 210, 255, 0.15)', glow: 'rgba(0, 210, 255, 0.4)', hover: '#00a5cc' }
         };
         if (themes[themeName]) {
             const selected = themes[themeName];
             document.documentElement.style.setProperty('--primary-color', selected.color);
             document.documentElement.style.setProperty('--primary-dim', selected.dim);
+            document.documentElement.style.setProperty('--primary-glow', selected.glow);
+            document.documentElement.style.setProperty('--primary-hover', selected.hover);
             localStorage.setItem('terminal_theme', themeName);
         }
     }
@@ -366,10 +368,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastTime = timestamp - (deltaTime % interval);
 
                 // Clear with deep black trail
+                ctx.shadowBlur = 0; // Disable shadows for clearRect to maintain performance
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.font = `${fontSize}px monospace`;
+                ctx.shadowBlur = 6; // Enable glowing shadow blur for falling characters
 
                 for (let i = 0; i < drops.length; i++) {
                     const drop = drops[i];
@@ -384,12 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
                         }
+                        ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
                     } else {
                         if (Math.random() > 0.98) {
                             ctx.fillStyle = currentMatrixHeadColor;
                         } else {
                             ctx.fillStyle = currentMatrixColor;
                         }
+                        ctx.shadowColor = currentMatrixColor;
                     }
 
                     // Render current character
