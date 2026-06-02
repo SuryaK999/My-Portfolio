@@ -1904,7 +1904,7 @@ main.fade-in {
 }
 
 .terminal-bubble.docked-left.auto-hidden {
-    transform: translateX(-50%);
+    transform: translateX(-25%);
 }
 
 .terminal-bubble.docked-left.auto-hidden:hover {
@@ -1922,7 +1922,7 @@ main.fade-in {
 }
 
 .terminal-bubble.docked-right.auto-hidden {
-    transform: translateX(50%);
+    transform: translateX(25%);
 }
 
 .terminal-bubble.docked-right.auto-hidden:hover {
