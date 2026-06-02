@@ -509,6 +509,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function detectOS() {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        if (userAgent.indexOf('mac') !== -1) return 'macos';
+        if (userAgent.indexOf('win') !== -1) return 'windows';
+        if (userAgent.indexOf('linux') !== -1 || userAgent.indexOf('android') !== -1) return 'linux';
+        return 'windows';
+    }
+
     function initTerminal() {
         const launcher = document.getElementById('terminalLauncher');
         const overlay = document.getElementById('terminalOverlay');
@@ -521,6 +529,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const header = document.getElementById('terminalHeader');
 
         if (!launcher || !overlay || !bubble) return;
+
+        const os = detectOS();
+        overlay.classList.remove('os-macos', 'os-windows', 'os-linux');
+        overlay.classList.add(`os-${os}`);
 
         // Reset state
         isTypingTerminal = false;

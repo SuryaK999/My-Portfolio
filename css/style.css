@@ -1643,13 +1643,14 @@ main.fade-in {
     border-radius: 50%;
     cursor: pointer;
     display: inline-block;
+    position: relative;
 }
 
-.terminal-dots .close-btn { background: #ff5f56; }
-.terminal-dots .minimize-btn { background: #ffbd2e; }
-.terminal-dots .maximize-btn { background: #27c93f; }
-
-.terminal-title {
+/* Default / macOS traffic lights styles */
+.terminal-overlay.os-macos .terminal-dots .close-btn { background: #ff5f56; }
+.terminal-overlay.os-macos .terminal-dots .minimize-btn { background: #ffbd2e; }
+.terminal-overlay.os-macos .terminal-dots .maximize-btn { background: #27c93f; }
+.terminal-overlay.os-macos .terminal-title {
     color: var(--text-muted);
     font-size: 0.75rem;
     flex-grow: 1;
@@ -1657,6 +1658,149 @@ main.fade-in {
     font-weight: 700;
     letter-spacing: 0.5px;
     padding-right: 50px;
+}
+
+/* Windows styles */
+.terminal-overlay.os-windows .terminal-header {
+    padding: 0.25rem 0.5rem 0.25rem 1rem;
+    justify-content: space-between;
+}
+.terminal-overlay.os-windows .terminal-title {
+    order: 1;
+    text-align: left;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding-right: 0;
+}
+.terminal-overlay.os-windows .terminal-dots {
+    order: 2;
+    gap: 0;
+}
+.terminal-overlay.os-windows .terminal-dots .dot {
+    width: 46px;
+    height: 32px;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+.terminal-overlay.os-windows .terminal-dots .minimize-btn {
+    order: 1;
+}
+.terminal-overlay.os-windows .terminal-dots .maximize-btn {
+    order: 2;
+}
+.terminal-overlay.os-windows .terminal-dots .close-btn {
+    order: 3;
+}
+.terminal-overlay.os-windows .terminal-dots .minimize-btn::before {
+    content: '';
+    width: 10px;
+    height: 1px;
+    background-color: #cccccc;
+}
+.terminal-overlay.os-windows .terminal-dots .maximize-btn::before {
+    content: '';
+    width: 9px;
+    height: 9px;
+    border: 1px solid #cccccc;
+}
+.terminal-overlay.os-windows .terminal-dots .close-btn::before,
+.terminal-overlay.os-windows .terminal-dots .close-btn::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 1px;
+    background-color: #cccccc;
+}
+.terminal-overlay.os-windows .terminal-dots .close-btn::before { transform: rotate(45deg); }
+.terminal-overlay.os-windows .terminal-dots .close-btn::after { transform: rotate(-45deg); }
+
+.terminal-overlay.os-windows .terminal-dots .dot:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+.terminal-overlay.os-windows .terminal-dots .close-btn:hover {
+    background: #e81123 !important;
+}
+.terminal-overlay.os-windows .terminal-dots .close-btn:hover::before,
+.terminal-overlay.os-windows .terminal-dots .close-btn:hover::after {
+    background-color: white;
+}
+
+/* Linux GNOME styles */
+.terminal-overlay.os-linux .terminal-header {
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+}
+.terminal-overlay.os-linux .terminal-title {
+    order: 1;
+    text-align: left;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding-right: 0;
+}
+.terminal-overlay.os-linux .terminal-dots {
+    order: 2;
+    gap: 6px;
+    align-items: center;
+}
+.terminal-overlay.os-linux .terminal-dots .dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #2e2e2e;
+    border: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+.terminal-overlay.os-linux .terminal-dots .minimize-btn {
+    order: 1;
+}
+.terminal-overlay.os-linux .terminal-dots .maximize-btn {
+    order: 2;
+}
+.terminal-overlay.os-linux .terminal-dots .close-btn {
+    order: 3;
+}
+.terminal-overlay.os-linux .terminal-dots .minimize-btn::before {
+    content: '';
+    width: 6px;
+    height: 1px;
+    background-color: #aaaaaa;
+}
+.terminal-overlay.os-linux .terminal-dots .maximize-btn::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border: 1px solid #aaaaaa;
+}
+.terminal-overlay.os-linux .terminal-dots .close-btn::before,
+.terminal-overlay.os-linux .terminal-dots .close-btn::after {
+    content: '';
+    position: absolute;
+    width: 7px;
+    height: 1px;
+    background-color: #aaaaaa;
+}
+.terminal-overlay.os-linux .terminal-dots .close-btn::before { transform: rotate(45deg); }
+.terminal-overlay.os-linux .terminal-dots .close-btn::after { transform: rotate(-45deg); }
+
+.terminal-overlay.os-linux .terminal-dots .dot:hover {
+    background: #3e3e3e;
+    border-color: #2b2b2b;
+}
+.terminal-overlay.os-linux .terminal-dots .close-btn:hover {
+    background: #df4b33 !important;
+}
+.terminal-overlay.os-linux .terminal-dots .close-btn:hover::before,
+.terminal-overlay.os-linux .terminal-dots .close-btn:hover::after {
+    background-color: white;
 }
 
 .terminal-body {
