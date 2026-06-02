@@ -1175,9 +1175,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 await printTerminalLine(`Unknown theme: ${themeName}. Available themes: matrix, cyberpunk, amber, dracula, red, blue.`);
             }
-        } else if (clean.startsWith('matrixcolor ') || clean.startsWith('matrix-color ')) {
-            const parts = clean.split(' ');
-            const colorParam = parts.slice(1).join(' ').trim().toLowerCase();
+        } else if (clean === 'matrixcolor' || clean.startsWith('matrixcolor ') || clean === 'matrix-color' || clean.startsWith('matrix-color ')) {
+            const parts = clean.split(/\s+/);
+            const colorParam = parts.length > 1 ? parts[1].toLowerCase() : '';
             const colorsMap = {
                 'green': { main: '#00ff41', head: '#b3ffd1', name: 'Matrix Green' },
                 'matrix': { main: '#00ff41', head: '#b3ffd1', name: 'Matrix Green' },
@@ -1186,10 +1186,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 'pink': { main: '#ff007f', head: '#ffc0cb', name: 'Neon Pink' },
                 'yellow': { main: '#ffff00', head: '#ffffe0', name: 'Retro Yellow' },
                 'blue': { main: '#00d2ff', head: '#d0f8ff', name: 'Electric Blue' },
+                'orange': { main: '#ff8c00', head: '#ffe4b5', name: 'Dark Orange' },
+                'cyan': { main: '#00ffff', head: '#e0ffff', name: 'Cyan' },
+                'amber': { main: '#ffb000', head: '#ffeed0', name: 'Amber Orange' },
+                'white': { main: '#ffffff', head: '#ffffff', name: 'Pure White' },
                 'rgb': { name: 'RGB Rainbow' }
             };
 
-            if (colorsMap[colorParam]) {
+            if (!colorParam) {
+                await printTerminalLine('Usage: matrixcolor <color>');
+                await printTerminalLine('Supported colors: green, red, purple, pink, yellow, blue, orange, cyan, amber, white, rgb');
+            } else if (colorsMap[colorParam]) {
                 if (colorParam === 'rgb') {
                     isMatrixRGB = true;
                 } else {
@@ -1203,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 await printTerminalLine(`Matrix Rain color successfully changed to ${colorsMap[colorParam].name}.`);
             } else {
-                await printTerminalLine(`Unknown matrix color: ${colorParam}. Supported colors: green, red, purple, pink, yellow, blue, rgb.`);
+                await printTerminalLine(`Unknown matrix color: ${colorParam}. Supported colors: green, red, purple, pink, yellow, blue, orange, cyan, amber, white, rgb.`);
             }
         } else if (clean === 'clear') {
             const output = document.getElementById('terminalOutput');
