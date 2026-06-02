@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Navbar Scroll Effect
+    // Persistent Header Scroll Effect
     const header = document.querySelector('.header');
     const isHomePage = () => {
         const path = window.location.pathname.split('/').pop();
@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateHeader = () => {
+        if (!header) return;
         if (window.scrollY > 50 || !isHomePage()) {
             header.classList.add('scrolled');
         } else {
@@ -16,24 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     window.addEventListener('scroll', updateHeader);
     updateHeader(); // Initial check
-
-    // Active Link Highlighting based on URL
-    const navLinks = document.querySelectorAll('.nav-link');
-    const currentPath = window.location.pathname;
-    let currentFile = currentPath.split('/').pop();
-
-    // Default to index.html if path is empty or /
-    if (!currentFile || currentFile === '') {
-        currentFile = 'index.html';
-    }
-
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-        const href = link.getAttribute('href');
-        if (href === currentFile) {
-            link.classList.add('active');
-        }
-    });
 
     // Intersection Observer for Fly-in Animations
     const observerOptions = {
@@ -50,124 +33,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, observerOptions);
 
-    document.querySelectorAll('.stat-card, .skill-icon-card, .project-card, .about-image, .about-content, .timeline-item').forEach(el => {
-        flyInObserver.observe(el);
-    });
-
-    // Smooth scroll for internal anchors (if any)
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                e.preventDefault();
-                window.scrollTo({
-                    top: targetElement.offsetTop - 40,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // Skills Tab Switcher with Smooth Fade
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const skillsGrid = document.getElementById('skills-grid');
-    const toolsGrid = document.getElementById('tools-grid');
-
-    tabBtns.forEach((btn, index) => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Smooth fade transition
-            if (index === 0) {
-                toolsGrid.style.opacity = '0';
-                toolsGrid.style.transform = 'translateY(10px)';
-                setTimeout(() => {
-                    toolsGrid.classList.add('hidden');
-                    skillsGrid.classList.remove('hidden');
-                    setTimeout(() => {
-                        skillsGrid.style.opacity = '1';
-                        skillsGrid.style.transform = 'translateY(0)';
-                    }, 50);
-                }, 200);
-            } else {
-                skillsGrid.style.opacity = '0';
-                skillsGrid.style.transform = 'translateY(10px)';
-                setTimeout(() => {
-                    skillsGrid.classList.add('hidden');
-                    toolsGrid.classList.remove('hidden');
-                    setTimeout(() => {
-                        toolsGrid.style.opacity = '1';
-                        toolsGrid.style.transform = 'translateY(0)';
-                    }, 50);
-                }, 200);
-            }
-        });
-    });
-
-    // Projects Slider Navigation
-    const slider = document.getElementById('projectsSlider');
-    const prevBtn = document.querySelector('.slider-prev');
-    const nextBtn = document.querySelector('.slider-next');
-    const scrollAmount = 240; // Card width + gap
-
-    if (prevBtn && nextBtn && slider) {
-        prevBtn.addEventListener('click', () => {
-            slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        });
-
-        nextBtn.addEventListener('click', () => {
-            slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    function initFlyInObserver() {
+        document.querySelectorAll('.stat-card, .skill-icon-card, .project-card, .about-image, .about-content, .timeline-item').forEach(el => {
+            flyInObserver.observe(el);
         });
     }
 
-    // Projects Filter Logic
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const projectCards = document.querySelectorAll('.project-card');
+    // Smooth scroll for internal anchors (using delegation for SPA compatibility)
+    document.addEventListener('click', (e) => {
+        const anchor = e.target.closest('a[href^="#"]');
+        if (!anchor) return;
+        const targetId = anchor.getAttribute('href');
+        if (targetId === '#') return;
 
-    if (filterBtns.length > 0 && projectCards.length > 0) {
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Set active class
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                const filterValue = btn.getAttribute('data-filter');
-
-                projectCards.forEach(card => {
-                    const category = card.getAttribute('data-category');
-                    card.classList.remove('fade-in');
-
-                    if (filterValue === 'all' || category === filterValue) {
-                        card.classList.remove('hidden-project');
-                        // Trigger reflow to restart animation
-                        void card.offsetWidth;
-                        card.classList.add('fade-in');
-                    } else {
-                        card.classList.add('hidden-project');
-                    }
-                });
-            });
-        });
-    }
-
-    // Back to Top functionality
-    const backToTopBtn = document.getElementById('backToTop');
-    const scrollIndicator = document.querySelector('.scroll-indicator');
-
-    if (backToTopBtn) {
-        backToTopBtn.addEventListener('click', () => {
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            e.preventDefault();
             window.scrollTo({
-                top: 0,
+                top: targetElement.offsetTop - 40,
                 behavior: 'smooth'
             });
-        });
+        }
+    });
+
+    // Back to Top functionality
+    function initBackToTop() {
+        const backToTopBtn = document.getElementById('backToTop');
+        if (backToTopBtn) {
+            backToTopBtn.onclick = () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            };
+        }
     }
 
-    // Custom Toast Notification System
+    // Custom Toast Notification System (Global helper)
     window.showToast = function(message, type = 'success') {
         let container = document.getElementById('toast-container');
         if (!container) {
@@ -214,9 +116,116 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Skills Tab Switcher with Smooth Fade
+    function initSkillsTab() {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const skillsGrid = document.getElementById('skills-grid');
+        const toolsGrid = document.getElementById('tools-grid');
+
+        if (!skillsGrid || !toolsGrid || tabBtns.length === 0) return;
+
+        // Reset grids to default skills view
+        skillsGrid.classList.remove('hidden');
+        skillsGrid.style.opacity = '1';
+        skillsGrid.style.transform = 'translateY(0)';
+        toolsGrid.classList.add('hidden');
+        toolsGrid.style.opacity = '0';
+
+        tabBtns.forEach((btn, index) => {
+            // Keep first button active by default
+            if (index === 0) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+
+            btn.onclick = () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Smooth fade transition
+                if (index === 0) {
+                    toolsGrid.style.opacity = '0';
+                    toolsGrid.style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        toolsGrid.classList.add('hidden');
+                        skillsGrid.classList.remove('hidden');
+                        setTimeout(() => {
+                            skillsGrid.style.opacity = '1';
+                            skillsGrid.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, 200);
+                } else {
+                    skillsGrid.style.opacity = '0';
+                    skillsGrid.style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        skillsGrid.classList.add('hidden');
+                        toolsGrid.classList.remove('hidden');
+                        setTimeout(() => {
+                            toolsGrid.style.opacity = '1';
+                            toolsGrid.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, 200);
+                }
+            };
+        });
+    }
+
+    // Projects Slider Navigation
+    function initProjectsSlider() {
+        const slider = document.getElementById('projectsSlider');
+        const prevBtn = document.querySelector('.slider-prev');
+        const nextBtn = document.querySelector('.slider-next');
+        const scrollAmount = 240; // Card width + gap
+
+        if (prevBtn && nextBtn && slider) {
+            prevBtn.onclick = () => {
+                slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            };
+
+            nextBtn.onclick = () => {
+                slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            };
+        }
+    }
+
+    // Projects Filter Logic
+    function initProjectsFilter() {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const projectCards = document.querySelectorAll('.project-card');
+
+        if (filterBtns.length > 0 && projectCards.length > 0) {
+            filterBtns.forEach(btn => {
+                btn.onclick = () => {
+                    // Set active class
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filterValue = btn.getAttribute('data-filter');
+
+                    projectCards.forEach(card => {
+                        const category = card.getAttribute('data-category');
+                        card.classList.remove('fade-in');
+
+                        if (filterValue === 'all' || category === filterValue) {
+                            card.classList.remove('hidden-project');
+                            // Trigger reflow to restart animation
+                            void card.offsetWidth;
+                            card.classList.add('fade-in');
+                        } else {
+                            card.classList.add('hidden-project');
+                        }
+                    });
+                };
+            });
+        }
+    }
+
     // Form Submission Handling
-    const contactForm = document.querySelector('form');
-    if (contactForm) {
+    function initContactForm() {
+        const contactForm = document.querySelector('form');
+        if (!contactForm) return;
+
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const submitBtn = contactForm.querySelector('button');
@@ -271,8 +280,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // GitHub Guestbook (Utterances integration)
+    function initGuestbook() {
+        const container = document.getElementById('utterances-container');
+        if (!container) return;
+
+        container.innerHTML = '';
+        const script = document.createElement('script');
+        script.src = 'https://utteranc.es/client.js';
+        script.setAttribute('repo', 'SuryaK999/My-Portfolio');
+        script.setAttribute('issue-term', 'pathname');
+        script.setAttribute('theme', 'github-dark');
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        container.appendChild(script);
+    }
+
     // Matrix Rain Effect - Professional Grid-Perfect Version
+    let matrixAnimId = null;
     function initMatrix() {
+        if (matrixAnimId) {
+            cancelAnimationFrame(matrixAnimId);
+            matrixAnimId = null;
+        }
+
         const canvas = document.getElementById('matrixCanvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
@@ -290,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let drops = [];
 
         function setup() {
+            if (!canvas.parentElement) return;
             canvas.width = window.innerWidth;
             canvas.height = canvas.parentElement.offsetHeight;
             columns = Math.floor(canvas.width / colWidth);
@@ -350,17 +382,414 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            requestAnimationFrame(draw);
+            matrixAnimId = requestAnimationFrame(draw);
         }
 
         setup();
-        requestAnimationFrame(draw);
+        matrixAnimId = requestAnimationFrame(draw);
 
-        window.addEventListener('resize', () => {
-            setup();
+        // Self-cleaning resize handler
+        const handleResize = () => {
+            if (document.getElementById('matrixCanvas')) {
+                setup();
+            } else {
+                window.removeEventListener('resize', handleResize);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+    }
+
+    // Draggable Terminal CLI System
+    let isTerminalMaximized = false;
+    let terminalOriginalStyle = {};
+
+    function initTerminal() {
+        const launcher = document.getElementById('terminalLauncher');
+        const overlay = document.getElementById('terminalOverlay');
+        const closeBtn = document.getElementById('terminalClose');
+        const minBtn = document.getElementById('terminalMin');
+        const maxBtn = document.getElementById('terminalMax');
+        const input = document.getElementById('terminalInput');
+        const body = document.getElementById('terminalBody');
+        const header = document.getElementById('terminalHeader');
+
+        if (!launcher || !overlay) return;
+
+        // Reset state
+        isTerminalMaximized = false;
+        terminalOriginalStyle = {};
+
+        // Toggle terminal open
+        launcher.onclick = () => {
+            overlay.classList.toggle('hidden');
+            if (!overlay.classList.contains('hidden')) {
+                input.focus();
+            }
+        };
+
+        // Close terminal
+        closeBtn.onclick = () => {
+            overlay.classList.add('hidden');
+        };
+
+        // Minimize terminal body only
+        minBtn.onclick = () => {
+            body.classList.toggle('hidden');
+            if (body.classList.contains('hidden')) {
+                overlay.style.height = 'auto';
+            } else {
+                overlay.style.height = isTerminalMaximized ? '100vh' : '350px';
+            }
+        };
+
+        // Maximize terminal window
+        maxBtn.onclick = () => {
+            toggleTerminalMaximize(overlay, body);
+        };
+
+        // Auto-focus terminal input on body clicks
+        body.onclick = () => {
+            input.focus();
+        };
+
+        // Setup Draggable
+        makeTerminalDraggable(header, overlay);
+
+        // Input Submission
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                const cmd = input.value.trim();
+                input.value = '';
+
+                // Print the prompt and typed command
+                printTerminalLine(`<span class="prompt">visitor@surya-portfolio:~$</span> ${escapeTerminalHTML(cmd)}`);
+
+                if (cmd !== '') {
+                    handleTerminalCommand(cmd.toLowerCase());
+                } else {
+                    printTerminalLine('');
+                }
+            }
+        };
+    }
+
+    function toggleTerminalMaximize(overlay, body) {
+        if (!isTerminalMaximized) {
+            terminalOriginalStyle = {
+                top: overlay.style.top,
+                left: overlay.style.left,
+                width: overlay.style.width,
+                height: overlay.style.height,
+                bottom: overlay.style.bottom,
+                right: overlay.style.right,
+                borderRadius: overlay.style.borderRadius
+            };
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100vw';
+            overlay.style.height = '100vh';
+            overlay.style.bottom = 'auto';
+            overlay.style.right = 'auto';
+            overlay.style.borderRadius = '0';
+            body.classList.remove('hidden');
+            isTerminalMaximized = true;
+        } else {
+            overlay.style.top = terminalOriginalStyle.top || '';
+            overlay.style.left = terminalOriginalStyle.left || '';
+            overlay.style.width = terminalOriginalStyle.width || '';
+            overlay.style.height = terminalOriginalStyle.height || '';
+            overlay.style.bottom = terminalOriginalStyle.bottom || '';
+            overlay.style.right = terminalOriginalStyle.right || '';
+            overlay.style.borderRadius = '12px';
+            isTerminalMaximized = false;
+        }
+    }
+
+    function makeTerminalDraggable(header, overlay) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        header.onmousedown = dragMouseDown;
+        header.ontouchstart = dragTouchStart;
+
+        function dragMouseDown(e) {
+            if (isTerminalMaximized) return;
+            if (e.target.classList.contains('dot')) return;
+            e = e || window.event;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function dragTouchStart(e) {
+            if (isTerminalMaximized) return;
+            if (e.target.classList.contains('dot')) return;
+            pos3 = e.touches[0].clientX;
+            pos4 = e.touches[0].clientY;
+            document.ontouchend = closeDragElement;
+            document.ontouchmove = elementTouchDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            overlay.style.top = (overlay.offsetTop - pos2) + "px";
+            overlay.style.left = (overlay.offsetLeft - pos1) + "px";
+            overlay.style.bottom = "auto";
+            overlay.style.right = "auto";
+        }
+
+        function elementTouchDrag(e) {
+            pos1 = pos3 - e.touches[0].clientX;
+            pos2 = pos4 - e.touches[0].clientY;
+            pos3 = e.touches[0].clientX;
+            pos4 = e.touches[0].clientY;
+            overlay.style.top = (overlay.offsetTop - pos2) + "px";
+            overlay.style.left = (overlay.offsetLeft - pos1) + "px";
+            overlay.style.bottom = "auto";
+            overlay.style.right = "auto";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.ontouchend = null;
+            document.ontouchmove = null;
+        }
+    }
+
+    function handleTerminalCommand(cmd) {
+        const clean = cmd.trim();
+        if (clean === 'help') {
+            printTerminalLine('Available Commands:', true);
+            printTerminalLine('  <span class="highlight">about</span>    - Learn about Surya Prakash');
+            printTerminalLine('  <span class="highlight">skills</span>   - Display technical skills');
+            printTerminalLine('  <span class="highlight">projects</span> - View portfolio projects');
+            printTerminalLine('  <span class="highlight">contact</span>  - Display contact channels');
+            printTerminalLine('  <span class="highlight">clear</span>    - Clear terminal logs');
+            printTerminalLine('  <span class="highlight">exit</span>     - Close the terminal window');
+        } else if (clean === 'about') {
+            printTerminalLine('Surya Prakash is a dedicated Computer Science student and expert developer in the making. Specialized in writing high-performance application architectures, scalable databases, and smooth responsive user experiences.');
+        } else if (clean === 'skills') {
+            printTerminalLine('Technical Skillset:', true);
+            printTerminalLine('  Languages: Python, Java, JavaScript, Rust');
+            printTerminalLine('  Web Tech:  Svelte 5, Node.js, SQLite, HTML5, CSS3');
+            printTerminalLine('  Tools:     VS Code, Tauri, Electron, Git/GitHub, Vercel');
+        } else if (clean === 'projects') {
+            printTerminalLine('Featured Projects:', true);
+            printTerminalLine('  * Realtime Study Room (Socket.io collaborative study hub)');
+            printTerminalLine('  * Tauri Focus App (Tray-utility timer app built in Rust & Svelte)');
+            printTerminalLine('  * Desktop Music Player (Electron-based music companion)');
+            printTerminalLine('  * Apple TV Web Clone (High-fidelity responsive front-end clone)');
+        } else if (clean === 'contact') {
+            printTerminalLine('Contact Links:', true);
+            printTerminalLine('  Email:    <a href="mailto:suryak93813040@gmail.com" class="highlight">suryak93813040@gmail.com</a>');
+            printTerminalLine('  GitHub:   <a href="https://github.com/SuryaK999" target="_blank" class="highlight">github.com/SuryaK999</a>');
+            printTerminalLine('  LinkedIn: <a href="https://linkedin.com/in/suryaprakash" target="_blank" class="highlight">linkedin.com/in/suryaprakash</a>');
+        } else if (clean === 'clear') {
+            const output = document.getElementById('terminalOutput');
+            if (output) output.innerHTML = '';
+        } else if (clean === 'exit') {
+            const overlay = document.getElementById('terminalOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        } else {
+            printTerminalLine(`command not found: ${escapeTerminalHTML(clean)}. Type <span class="highlight">help</span> to view commands.`);
+        }
+    }
+
+    function escapeTerminalHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
+
+    function printTerminalLine(htmlContent, isHighlight = false) {
+        const output = document.getElementById('terminalOutput');
+        if (!output) return;
+        const p = document.createElement('p');
+        p.className = isHighlight ? 'system-msg highlight' : 'terminal-line';
+        p.innerHTML = htmlContent;
+        output.appendChild(p);
+
+        const body = document.getElementById('terminalBody');
+        if (body) {
+            body.scrollTop = body.scrollHeight;
+        }
+    }
+
+    // Client-Side SPA Router System
+    function initRouter() {
+        // Intercept navigation links
+        document.body.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+
+            const href = link.getAttribute('href');
+            if (!href) return;
+
+            // Check if it's an external link, target blank, download, or asset
+            if (
+                link.target === '_blank' || 
+                link.hasAttribute('download') || 
+                href.startsWith('http://') || 
+                href.startsWith('https://') && !href.startsWith(window.location.origin) ||
+                href.startsWith('mailto:') || 
+                href.startsWith('tel:') ||
+                href.startsWith('#') ||
+                href.endsWith('.pdf')
+            ) {
+                // Let browser handle it
+                return;
+            }
+
+            e.preventDefault();
+            navigateTo(href);
+        });
+
+        // Intercept browser back/forward buttons
+        window.addEventListener('popstate', () => {
+            navigateTo(window.location.pathname, false);
         });
     }
 
-    initMatrix();
+    function navigateTo(url, pushToHistory = true) {
+        const progressBar = document.getElementById('page-progress-bar');
+        const mainContent = document.querySelector('main');
+        if (!mainContent) return;
 
+        // Animate progress bar start
+        if (progressBar) {
+            progressBar.style.opacity = '1';
+            progressBar.style.width = '30%';
+        }
+
+        // Fade out active page content
+        mainContent.classList.remove('fade-in');
+        mainContent.classList.add('fade-out');
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('Could not fetch path');
+                if (progressBar) progressBar.style.width = '70%';
+                return response.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newMain = doc.querySelector('main');
+                const newTitle = doc.querySelector('title');
+
+                if (!newMain) throw new Error('Main element not found in path');
+
+                // Wait for the fade-out duration (300ms) to update content
+                setTimeout(() => {
+                    // Update browser history
+                    if (pushToHistory) {
+                        history.pushState(null, '', url);
+                    }
+
+                    // Update Title
+                    if (newTitle) {
+                        document.title = newTitle.innerText;
+                    }
+
+                    // Swap main content
+                    mainContent.innerHTML = newMain.innerHTML;
+                    
+                    // Set styles of main container if needed
+                    if (newMain.getAttribute('style')) {
+                        mainContent.setAttribute('style', newMain.getAttribute('style'));
+                    } else {
+                        mainContent.removeAttribute('style');
+                    }
+
+                    // Reset scroll to top
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+
+                    // Highlight navbar tab active state
+                    updateActiveNavLink();
+
+                    // Animate progress bar completion
+                    if (progressBar) {
+                        progressBar.style.width = '100%';
+                        setTimeout(() => {
+                            progressBar.style.opacity = '0';
+                            setTimeout(() => {
+                                progressBar.style.width = '0';
+                            }, 300);
+                        }, 300);
+                    }
+
+                    // Re-run JavaScript logic for newly injected DOM
+                    reinitializePageScripts();
+
+                    // Fade back in
+                    mainContent.classList.remove('fade-out');
+                    mainContent.classList.add('fade-in');
+                }, 300);
+            })
+            .catch(error => {
+                console.error('Navigation error:', error);
+                // Fallback to regular browser load
+                window.location.href = url;
+            });
+    }
+
+    function updateActiveNavLink() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const path = window.location.pathname.split('/').pop() || 'index.html';
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href');
+            if (href === path) {
+                link.classList.add('active');
+            }
+        });
+
+        updateHeader();
+    }
+
+    function reinitializePageScripts() {
+        // Clear matrix rain animation loops to prevent leaking memory
+        if (matrixAnimId) {
+            cancelAnimationFrame(matrixAnimId);
+            matrixAnimId = null;
+        }
+
+        // Initialize animations on the new components
+        initFlyInObserver();
+
+        // Identify current file/page route
+        const path = window.location.pathname.split('/').pop() || 'index.html';
+
+        if (path === 'index.html' || path === '') {
+            initMatrix();
+            initTerminal();
+        } else if (path === 'skills.html') {
+            initSkillsTab();
+        } else if (path === 'projects.html') {
+            initProjectsSlider();
+            initProjectsFilter();
+        } else if (path === 'contact.html') {
+            initContactForm();
+            initGuestbook();
+        }
+    }
+
+    // --- INITIAL BOOTSTRAP ---
+    initBackToTop();
+    initRouter();
+    reinitializePageScripts();
 });

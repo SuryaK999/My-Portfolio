@@ -18,6 +18,7 @@
 </head>
 
 <body>
+    <div id="page-progress-bar"></div>
     <header class="header">
         <nav class="navbar container">
             <a href="index.html" class="logo">Port<span>.</span>Folio</a>
@@ -47,6 +48,36 @@
                 <a href="contact.html" class="btn-electric">GET IN TOUCH</a>
             </div>
         </section>
+
+        <!-- Terminal Launcher Button -->
+        <button class="terminal-launcher" id="terminalLauncher" aria-label="Open Terminal">
+            <i class="fas fa-terminal"></i>
+        </button>
+
+        <!-- Draggable Terminal Window Overlay -->
+        <div class="terminal-overlay hidden" id="terminalOverlay">
+            <div class="terminal-header" id="terminalHeader">
+                <div class="terminal-dots">
+                    <span class="dot close-btn" id="terminalClose"></span>
+                    <span class="dot minimize-btn" id="terminalMin"></span>
+                    <span class="dot maximize-btn" id="terminalMax"></span>
+                </div>
+                <div class="terminal-title">visitor@surya-portfolio: ~</div>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+                <div class="terminal-output" id="terminalOutput">
+                    <p class="system-msg">Welcome to Surya's Interactive Terminal CLI [Version 1.0.0]</p>
+                    <p class="system-msg">Type <span class="highlight">help</span> to view all available commands.</p>
+                    <br>
+                </div>
+                <div class="terminal-input-line">
+                    <span class="prompt">visitor@surya-portfolio:~$</span>
+                    <div class="input-wrapper">
+                        <input type="text" class="terminal-input" id="terminalInput" autofocus autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
     <footer class="footer">
         <div class="container footer-content">
