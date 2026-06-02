@@ -1719,6 +1719,7 @@ main.fade-in {
     font-family: inherit;
     font-size: inherit;
     width: 100%;
+    caret-color: var(--primary-color);
 }
 
 /* GUESTBOOK CUSTOM STYLES */
@@ -1760,4 +1761,9 @@ main.fade-in {
         right: 15px;
         bottom: 20px;
     }
+}
+
+#utterances-container iframe {
+    background: transparent !important;
+    color-scheme: dark;
 }

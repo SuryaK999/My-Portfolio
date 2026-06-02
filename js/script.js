@@ -402,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Draggable Terminal CLI System
     let isTerminalMaximized = false;
     let terminalOriginalStyle = {};
+    let isTypingTerminal = false;
 
     function initTerminal() {
         const launcher = document.getElementById('terminalLauncher');
@@ -418,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset state
         isTerminalMaximized = false;
         terminalOriginalStyle = {};
+        isTypingTerminal = false;
 
         // Toggle terminal open
         launcher.onclick = () => {
@@ -449,25 +451,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-focus terminal input on body clicks
         body.onclick = () => {
-            input.focus();
+            if (!isTypingTerminal) {
+                input.focus();
+            }
         };
 
         // Setup Draggable
         makeTerminalDraggable(header, overlay);
 
         // Input Submission
-        input.onkeydown = (e) => {
+        input.onkeydown = async (e) => {
             if (e.key === 'Enter') {
+                if (isTypingTerminal) return; // Prevent double trigger while typewriting
                 const cmd = input.value.trim();
                 input.value = '';
 
                 // Print the prompt and typed command
-                printTerminalLine(`<span class="prompt">visitor@surya-portfolio:~$</span> ${escapeTerminalHTML(cmd)}`);
+                printTerminalLineInstant(`<span class="prompt">visitor@surya-portfolio:~$</span> ${escapeTerminalHTML(cmd)}`);
 
                 if (cmd !== '') {
-                    handleTerminalCommand(cmd.toLowerCase());
+                    await handleTerminalCommand(cmd.toLowerCase());
                 } else {
-                    printTerminalLine('');
+                    printTerminalLineInstant('');
                 }
             }
         };
@@ -537,8 +542,19 @@ document.addEventListener('DOMContentLoaded', () => {
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-            overlay.style.top = (overlay.offsetTop - pos2) + "px";
-            overlay.style.left = (overlay.offsetLeft - pos1) + "px";
+
+            let newTop = overlay.offsetTop - pos2;
+            let newLeft = overlay.offsetLeft - pos1;
+
+            // Restrict dragging boundaries to keep the terminal window visible inside viewport
+            const maxLeft = window.innerWidth - overlay.offsetWidth;
+            const maxTop = window.innerHeight - overlay.offsetHeight;
+
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            overlay.style.top = newTop + "px";
+            overlay.style.left = newLeft + "px";
             overlay.style.bottom = "auto";
             overlay.style.right = "auto";
         }
@@ -548,12 +564,23 @@ document.addEventListener('DOMContentLoaded', () => {
             pos2 = pos4 - e.touches[0].clientY;
             pos3 = e.touches[0].clientX;
             pos4 = e.touches[0].clientY;
-            overlay.style.top = (overlay.offsetTop - pos2) + "px";
-            overlay.style.left = (overlay.offsetLeft - pos1) + "px";
+
+            let newTop = overlay.offsetTop - pos2;
+            let newLeft = overlay.offsetLeft - pos1;
+
+            const maxLeft = window.innerWidth - overlay.offsetWidth;
+            const maxTop = window.innerHeight - overlay.offsetHeight;
+
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            overlay.style.top = newTop + "px";
+            overlay.style.left = newLeft + "px";
             overlay.style.bottom = "auto";
             overlay.style.right = "auto";
         }
 
+        // Cleanup events
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
@@ -562,34 +589,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleTerminalCommand(cmd) {
+    async function handleTerminalCommand(cmd) {
+        isTypingTerminal = true;
+        const input = document.getElementById('terminalInput');
+        if (input) input.disabled = true;
+
         const clean = cmd.trim();
         if (clean === 'help') {
-            printTerminalLine('Available Commands:', true);
-            printTerminalLine('  <span class="highlight">about</span>    - Learn about Surya Prakash');
-            printTerminalLine('  <span class="highlight">skills</span>   - Display technical skills');
-            printTerminalLine('  <span class="highlight">projects</span> - View portfolio projects');
-            printTerminalLine('  <span class="highlight">contact</span>  - Display contact channels');
-            printTerminalLine('  <span class="highlight">clear</span>    - Clear terminal logs');
-            printTerminalLine('  <span class="highlight">exit</span>     - Close the terminal window');
+            await printTerminalLine('Available Commands:', true);
+            await printTerminalLine('  about    - Learn about Surya Prakash');
+            await printTerminalLine('  skills   - Display technical skills');
+            await printTerminalLine('  projects - View portfolio projects');
+            await printTerminalLine('  contact  - Display contact channels');
+            await printTerminalLine('  clear    - Clear terminal logs');
+            await printTerminalLine('  exit     - Close the terminal window');
         } else if (clean === 'about') {
-            printTerminalLine('Surya Prakash is a dedicated Computer Science student and expert developer in the making. Specialized in writing high-performance application architectures, scalable databases, and smooth responsive user experiences.');
+            await printTerminalLine('Surya Prakash is a dedicated Computer Science student and expert developer in the making. Specialized in writing high-performance application architectures, scalable databases, and smooth responsive user experiences.');
         } else if (clean === 'skills') {
-            printTerminalLine('Technical Skillset:', true);
-            printTerminalLine('  Languages: Python, Java, JavaScript, Rust');
-            printTerminalLine('  Web Tech:  Svelte 5, Node.js, SQLite, HTML5, CSS3');
-            printTerminalLine('  Tools:     VS Code, Tauri, Electron, Git/GitHub, Vercel');
+            await printTerminalLine('Technical Skillset:', true);
+            await printTerminalLine('  Languages: Python, Java, JavaScript, Rust');
+            await printTerminalLine('  Web Tech:  Svelte 5, Node.js, SQLite, HTML5, CSS3');
+            await printTerminalLine('  Tools:     VS Code, Tauri, Electron, Git/GitHub, Vercel');
         } else if (clean === 'projects') {
-            printTerminalLine('Featured Projects:', true);
-            printTerminalLine('  * Realtime Study Room (Socket.io collaborative study hub)');
-            printTerminalLine('  * Tauri Focus App (Tray-utility timer app built in Rust & Svelte)');
-            printTerminalLine('  * Desktop Music Player (Electron-based music companion)');
-            printTerminalLine('  * Apple TV Web Clone (High-fidelity responsive front-end clone)');
+            await printTerminalLine('Featured Projects:', true);
+            await printTerminalLine('  * Realtime Study Room (Socket.io collaborative study hub)');
+            await printTerminalLine('  * Tauri Focus App (Tray-utility timer app built in Rust & Svelte)');
+            await printTerminalLine('  * Desktop Music Player (Electron-based music companion)');
+            await printTerminalLine('  * Apple TV Web Clone (High-fidelity responsive front-end clone)');
         } else if (clean === 'contact') {
-            printTerminalLine('Contact Links:', true);
-            printTerminalLine('  Email:    <a href="mailto:suryak93813040@gmail.com" class="highlight">suryak93813040@gmail.com</a>');
-            printTerminalLine('  GitHub:   <a href="https://github.com/SuryaK999" target="_blank" class="highlight">github.com/SuryaK999</a>');
-            printTerminalLine('  LinkedIn: <a href="https://linkedin.com/in/suryaprakash" target="_blank" class="highlight">linkedin.com/in/suryaprakash</a>');
+            await printTerminalLine('Contact Links:', true);
+            // Links must render as clickable HTML instantly, rather than typewritten text
+            printTerminalLineInstant('  Email:    <a href="mailto:suryak93813040@gmail.com" class="highlight">suryak93813040@gmail.com</a>');
+            printTerminalLineInstant('  GitHub:   <a href="https://github.com/SuryaK999" target="_blank" class="highlight">github.com/SuryaK999</a>');
+            printTerminalLineInstant('  LinkedIn: <a href="https://linkedin.com/in/suryaprakash" target="_blank" class="highlight">linkedin.com/in/suryaprakash</a>');
         } else if (clean === 'clear') {
             const output = document.getElementById('terminalOutput');
             if (output) output.innerHTML = '';
@@ -597,8 +629,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const overlay = document.getElementById('terminalOverlay');
             if (overlay) overlay.classList.add('hidden');
         } else {
-            printTerminalLine(`command not found: ${escapeTerminalHTML(clean)}. Type <span class="highlight">help</span> to view commands.`);
+            await printTerminalLine(`command not found: ${clean}. Type 'help' for a list of commands.`);
         }
+
+        if (input) {
+            input.disabled = false;
+            input.focus();
+        }
+        isTypingTerminal = false;
     }
 
     function escapeTerminalHTML(str) {
@@ -613,7 +651,33 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
 
-    function printTerminalLine(htmlContent, isHighlight = false) {
+    // Typewriter print effect for CLI output lines (only for text strings)
+    function printTerminalLine(htmlContent, isHighlight = false, speed = 12) {
+        const output = document.getElementById('terminalOutput');
+        if (!output) return Promise.resolve();
+
+        const p = document.createElement('p');
+        p.className = isHighlight ? 'system-msg highlight' : 'terminal-line';
+        output.appendChild(p);
+
+        return new Promise((resolve) => {
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < htmlContent.length) {
+                    p.textContent += htmlContent[index];
+                    index++;
+                    const body = document.getElementById('terminalBody');
+                    if (body) body.scrollTop = body.scrollHeight;
+                } else {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, speed);
+        });
+    }
+
+    // Instant print fallback for HTML strings containing custom link tags
+    function printTerminalLineInstant(htmlContent, isHighlight = false) {
         const output = document.getElementById('terminalOutput');
         if (!output) return;
         const p = document.createElement('p');
@@ -653,6 +717,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             e.preventDefault();
+
+            // Prevent fetching/routing if user is clicking a link to the current active page
+            const currentFilename = window.location.pathname.split('/').pop() || 'index.html';
+            const targetFilename = href.split('/').pop() || 'index.html';
+            if (currentFilename === targetFilename) {
+                return;
+            }
+
             navigateTo(href);
         });
 
@@ -673,10 +745,8 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '30%';
         }
 
-        // Fade out active page content
-        mainContent.classList.remove('fade-in');
-        mainContent.classList.add('fade-out');
-
+        // Fetch first in the background. We ONLY fade out content once the fetch succeeds.
+        // This makes the transition feel incredibly fast and avoids showing a blank screen on slow lines.
         fetch(url)
             .then(response => {
                 if (!response.ok) throw new Error('Could not fetch path');
@@ -692,7 +762,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!newMain) throw new Error('Main element not found in path');
 
-                // Wait for the fade-out duration (300ms) to update content
+                // Fade out current main content (0.3s)
+                mainContent.classList.remove('fade-in');
+                mainContent.classList.add('fade-out');
+
                 setTimeout(() => {
                     // Update browser history
                     if (pushToHistory) {
