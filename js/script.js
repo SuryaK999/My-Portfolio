@@ -792,6 +792,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         };
+
+        // Self-cleaning resize listener for overlay and bubble bounds checking
+        const handleOverlayResize = () => {
+            const currentOverlay = document.getElementById('terminalOverlay');
+            if (!currentOverlay) {
+                window.removeEventListener('resize', handleOverlayResize);
+                return;
+            }
+            
+            if (currentOverlay.classList.contains('hidden')) return;
+            
+            // Snap overlay boundaries
+            if (!isTerminalMaximized && window.innerWidth > 768) {
+                const rect = currentOverlay.getBoundingClientRect();
+                const maxLeft = window.innerWidth - rect.width;
+                const maxTop = window.innerHeight - rect.height;
+                const currentLeft = parseFloat(currentOverlay.style.left) || 0;
+                const currentTop = parseFloat(currentOverlay.style.top) || 0;
+                
+                currentOverlay.style.left = Math.max(10, Math.min(currentLeft, maxLeft - 10)) + 'px';
+                currentOverlay.style.top = Math.max(10, Math.min(currentTop, maxTop - 10)) + 'px';
+            }
+            
+            const currentBubble = document.getElementById('terminalBubble');
+            if (currentBubble && !currentBubble.classList.contains('hidden')) {
+                const isLeft = currentBubble.classList.contains('docked-left');
+                const targetX = isLeft ? 0 : (window.innerWidth - (currentBubble.classList.contains('docked-left') || currentBubble.classList.contains('docked-right') ? BUBBLE_DOCK_WIDTH : BUBBLE_FLOAT_SIZE));
+                const currentTop = parseFloat(currentBubble.style.top) || 0;
+                const maxTop = window.innerHeight - (currentBubble.classList.contains('docked-left') || currentBubble.classList.contains('docked-right') ? BUBBLE_DOCK_HEIGHT : BUBBLE_FLOAT_SIZE);
+                
+                currentBubble.style.left = targetX + 'px';
+                currentBubble.style.top = Math.max(10, Math.min(currentTop, maxTop - 10)) + 'px';
+            }
+        };
+        window.addEventListener('resize', handleOverlayResize);
     }
 
     function toggleTerminalMaximize(overlay, body) {
@@ -853,6 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function dragTouchStart(e) {
             if (isTerminalMaximized) return;
             if (e.target.classList.contains('dot')) return;
+            if (e.cancelable) e.preventDefault();
             pos3 = e.touches[0].clientX;
             pos4 = e.touches[0].clientY;
             document.ontouchend = closeDragElement;
@@ -870,7 +906,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let newTop = overlay.offsetTop - pos2;
             let newLeft = overlay.offsetLeft - pos1;
 
-            // Restrict dragging boundaries to keep the terminal window visible inside viewport
             const maxLeft = window.innerWidth - overlay.offsetWidth;
             const maxTop = window.innerHeight - overlay.offsetHeight;
 
@@ -884,6 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function elementTouchDrag(e) {
+            if (e.cancelable) e.preventDefault();
             pos1 = pos3 - e.touches[0].clientX;
             pos2 = pos4 - e.touches[0].clientY;
             pos3 = e.touches[0].clientX;
@@ -904,7 +940,6 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.style.right = "auto";
         }
 
-        // Cleanup events and save coordinates
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
@@ -954,6 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function dragTouchStart(e) {
             clearAutoHide();
+            if (e.cancelable) e.preventDefault();
             
             const rect = bubble.getBoundingClientRect();
             bubble.style.left = rect.left + 'px';
@@ -1024,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function elementTouchDrag(e) {
+            if (e.cancelable) e.preventDefault();
             const touch = e.touches[0];
             const dx = touch.clientX - startX;
             const dy = touch.clientY - startY;
