@@ -1,5 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Theme & Matrix Rain Global State
+    let currentMatrixColor = localStorage.getItem('matrix_color') || '#00ff41';
+    let currentMatrixHeadColor = localStorage.getItem('matrix_head_color') || '#b3ffd1';
+    let isMatrixRGB = localStorage.getItem('matrix_rgb') === 'true';
+
+    const savedTheme = localStorage.getItem('terminal_theme') || 'matrix';
+    applyTheme(savedTheme);
+
+    function applyTheme(themeName) {
+        const themes = {
+            'matrix': { color: '#00ff41', dim: 'rgba(0, 255, 65, 0.15)' },
+            'cyberpunk': { color: '#ff007f', dim: 'rgba(255, 0, 127, 0.15)' },
+            'amber': { color: '#ffb000', dim: 'rgba(255, 176, 0, 0.15)' },
+            'dracula': { color: '#bd93f9', dim: 'rgba(189, 147, 249, 0.15)' },
+            'red': { color: '#ff0000', dim: 'rgba(255, 0, 0, 0.15)' },
+            'blue': { color: '#00d2ff', dim: 'rgba(0, 210, 255, 0.15)' }
+        };
+        if (themes[themeName]) {
+            const selected = themes[themeName];
+            document.documentElement.style.setProperty('--primary-color', selected.color);
+            document.documentElement.style.setProperty('--primary-dim', selected.dim);
+            localStorage.setItem('terminal_theme', themeName);
+        }
+    }
+
     // Persistent Header Scroll Effect
     const header = document.querySelector('.header');
     const isHomePage = () => {
@@ -352,12 +377,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Pick a random character
                     const text = characters[Math.floor(Math.random() * characters.length)];
 
-                    // True Matrix Green
-                    // Head of the rain is slightly brighter for "amazing" visuals
-                    if (Math.random() > 0.98) {
-                        ctx.fillStyle = '#b3ffd1';
+                    if (isMatrixRGB) {
+                        const hue = (timestamp / 20 + i * (360 / drops.length)) % 360;
+                        if (Math.random() > 0.98) {
+                            ctx.fillStyle = `hsl(${hue}, 100%, 80%)`;
+                        } else {
+                            ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                        }
                     } else {
-                        ctx.fillStyle = '#00ff41';
+                        if (Math.random() > 0.98) {
+                            ctx.fillStyle = currentMatrixHeadColor;
+                        } else {
+                            ctx.fillStyle = currentMatrixColor;
+                        }
                     }
 
                     // Render current character
@@ -1068,12 +1100,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const clean = cmd.trim();
         if (clean === 'help') {
             await printTerminalLine('Available Commands:', true);
-            await printTerminalLine('  about    - Learn about Surya Prakash');
-            await printTerminalLine('  skills   - Display technical skills');
-            await printTerminalLine('  projects - View portfolio projects');
-            await printTerminalLine('  contact  - Display contact channels');
-            await printTerminalLine('  clear    - Clear terminal logs');
-            await printTerminalLine('  exit     - Close the terminal window');
+            await printTerminalLine('  about               - Learn about Surya Prakash');
+            await printTerminalLine('  skills              - Display technical skills');
+            await printTerminalLine('  projects            - View portfolio projects');
+            await printTerminalLine('  contact             - Display contact channels');
+            await printTerminalLine('  theme <name>        - Change UI theme (matrix, cyberpunk, amber, dracula, red, blue)');
+            await printTerminalLine('  matrixcolor <color> - Change Matrix rain color (green, red, purple, pink, yellow, blue, rgb)');
+            await printTerminalLine('  clear               - Clear terminal logs');
+            await printTerminalLine('  exit                - Close the terminal window');
         } else if (clean === 'about') {
             await printTerminalLine('Surya Prakash is a dedicated Computer Science student and expert developer in the making. Specialized in writing high-performance application architectures, scalable databases, and smooth responsive user experiences.');
         } else if (clean === 'skills') {
@@ -1093,6 +1127,84 @@ document.addEventListener('DOMContentLoaded', () => {
             printTerminalLineInstant('  Email:    <a href="mailto:suryak93813040@gmail.com" class="highlight">suryak93813040@gmail.com</a>');
             printTerminalLineInstant('  GitHub:   <a href="https://github.com/SuryaK999" target="_blank" class="highlight">github.com/SuryaK999</a>');
             printTerminalLineInstant('  LinkedIn: <a href="https://linkedin.com/in/suryaprakash" target="_blank" class="highlight">linkedin.com/in/suryaprakash</a>');
+        } else if (clean.startsWith('theme ')) {
+            const themeName = clean.substring(6).trim().toLowerCase();
+            const themes = {
+                'matrix': { color: '#00ff41', dim: 'rgba(0, 255, 65, 0.15)', name: 'Matrix Green' },
+                'cyberpunk': { color: '#ff007f', dim: 'rgba(255, 0, 127, 0.15)', name: 'Cyberpunk Pink' },
+                'amber': { color: '#ffb000', dim: 'rgba(255, 176, 0, 0.15)', name: 'Amber Orange' },
+                'dracula': { color: '#bd93f9', dim: 'rgba(189, 147, 249, 0.15)', name: 'Dracula Purple' },
+                'red': { color: '#ff0000', dim: 'rgba(255, 0, 0, 0.15)', name: 'Crimson Red' },
+                'blue': { color: '#00d2ff', dim: 'rgba(0, 210, 255, 0.15)', name: 'Electric Blue' }
+            };
+
+            if (themes[themeName]) {
+                applyTheme(themeName);
+                
+                if (themeName === 'matrix') {
+                    currentMatrixColor = '#00ff41';
+                    currentMatrixHeadColor = '#b3ffd1';
+                    isMatrixRGB = false;
+                } else if (themeName === 'red') {
+                    currentMatrixColor = '#ff0000';
+                    currentMatrixHeadColor = '#ffb3b3';
+                    isMatrixRGB = false;
+                } else if (themeName === 'cyberpunk') {
+                    currentMatrixColor = '#ff007f';
+                    currentMatrixHeadColor = '#ffc0cb';
+                    isMatrixRGB = false;
+                } else if (themeName === 'amber') {
+                    currentMatrixColor = '#ffb000';
+                    currentMatrixHeadColor = '#ffeed0';
+                    isMatrixRGB = false;
+                } else if (themeName === 'dracula') {
+                    currentMatrixColor = '#bd93f9';
+                    currentMatrixHeadColor = '#f8f8f2';
+                    isMatrixRGB = false;
+                } else if (themeName === 'blue') {
+                    currentMatrixColor = '#00d2ff';
+                    currentMatrixHeadColor = '#d0f8ff';
+                    isMatrixRGB = false;
+                }
+                
+                localStorage.setItem('matrix_color', currentMatrixColor);
+                localStorage.setItem('matrix_head_color', currentMatrixHeadColor);
+                localStorage.setItem('matrix_rgb', isMatrixRGB);
+
+                await printTerminalLine(`Theme successfully changed to ${themes[themeName].name}.`);
+            } else {
+                await printTerminalLine(`Unknown theme: ${themeName}. Available themes: matrix, cyberpunk, amber, dracula, red, blue.`);
+            }
+        } else if (clean.startsWith('matrixcolor ') || clean.startsWith('matrix-color ')) {
+            const parts = clean.split(' ');
+            const colorParam = parts.slice(1).join(' ').trim().toLowerCase();
+            const colorsMap = {
+                'green': { main: '#00ff41', head: '#b3ffd1', name: 'Matrix Green' },
+                'matrix': { main: '#00ff41', head: '#b3ffd1', name: 'Matrix Green' },
+                'red': { main: '#ff0000', head: '#ffb3b3', name: 'Crimson Red' },
+                'purple': { main: '#bd93f9', head: '#e8d7ff', name: 'Royal Purple' },
+                'pink': { main: '#ff007f', head: '#ffc0cb', name: 'Neon Pink' },
+                'yellow': { main: '#ffff00', head: '#ffffe0', name: 'Retro Yellow' },
+                'blue': { main: '#00d2ff', head: '#d0f8ff', name: 'Electric Blue' },
+                'rgb': { name: 'RGB Rainbow' }
+            };
+
+            if (colorsMap[colorParam]) {
+                if (colorParam === 'rgb') {
+                    isMatrixRGB = true;
+                } else {
+                    isMatrixRGB = false;
+                    currentMatrixColor = colorsMap[colorParam].main;
+                    currentMatrixHeadColor = colorsMap[colorParam].head;
+                }
+                localStorage.setItem('matrix_color', currentMatrixColor);
+                localStorage.setItem('matrix_head_color', currentMatrixHeadColor);
+                localStorage.setItem('matrix_rgb', isMatrixRGB);
+
+                await printTerminalLine(`Matrix Rain color successfully changed to ${colorsMap[colorParam].name}.`);
+            } else {
+                await printTerminalLine(`Unknown matrix color: ${colorParam}. Supported colors: green, red, purple, pink, yellow, blue, rgb.`);
+            }
         } else if (clean === 'clear') {
             const output = document.getElementById('terminalOutput');
             if (output) output.innerHTML = '';
