@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     window.addEventListener('scroll', updateHeader);
-    updateHeader(); // Initial check
+    updateHeader();
 
     // Intersection Observer for Fly-in Animations
     const observerOptions = {
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Smooth scroll for internal anchors (using delegation for SPA compatibility)
+    // Smooth scroll for internal anchors
     document.addEventListener('click', (e) => {
         const anchor = e.target.closest('a[href^="#"]');
         if (!anchor) return;
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Custom Toast Notification System (Global helper)
+    // Toast Notification System
     window.showToast = function(message, type = 'success') {
         let container = document.getElementById('toast-container');
         if (!container) {
@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.appendChild(toast);
 
-        // Force a reflow to trigger transition
         void toast.offsetWidth;
         toast.classList.add('show');
 
@@ -116,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Skills Tab Switcher with Smooth Fade
+    // Skills Tab Switcher
     function initSkillsTab() {
         const tabBtns = document.querySelectorAll('.tab-btn');
         const skillsGrid = document.getElementById('skills-grid');
@@ -124,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!skillsGrid || !toolsGrid || tabBtns.length === 0) return;
 
-        // Reset grids to default skills view
         skillsGrid.classList.remove('hidden');
         skillsGrid.style.opacity = '1';
         skillsGrid.style.transform = 'translateY(0)';
@@ -132,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
         toolsGrid.style.opacity = '0';
 
         tabBtns.forEach((btn, index) => {
-            // Keep first button active by default
             if (index === 0) {
                 btn.classList.add('active');
             } else {
@@ -143,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 tabBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
-                // Smooth fade transition
                 if (index === 0) {
                     toolsGrid.style.opacity = '0';
                     toolsGrid.style.transform = 'translateY(10px)';
@@ -176,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const slider = document.getElementById('projectsSlider');
         const prevBtn = document.querySelector('.slider-prev');
         const nextBtn = document.querySelector('.slider-next');
-        const scrollAmount = 240; // Card width + gap
+        const scrollAmount = 240;
 
         if (prevBtn && nextBtn && slider) {
             prevBtn.onclick = () => {
@@ -197,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filterBtns.length > 0 && projectCards.length > 0) {
             filterBtns.forEach(btn => {
                 btn.onclick = () => {
-                    // Set active class
                     filterBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
 
@@ -209,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (filterValue === 'all' || category === filterValue) {
                             card.classList.remove('hidden-project');
-                            // Trigger reflow to restart animation
                             void card.offsetWidth;
                             card.classList.add('fade-in');
                         } else {
@@ -235,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const formData = new FormData(contactForm);
             
-            // Check honeypot field (anti-spam bot detection)
+            // Honeypot anti-spam check
             if (formData.get('_honey')) {
                 setTimeout(() => {
                     showToast('Thank you! Your message has been received successfully.', 'success');
@@ -280,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // GitHub Guestbook (Utterances integration)
+    // GitHub Guestbook
     function initGuestbook() {
         const container = document.getElementById('utterances-container');
         if (!container) return;
@@ -296,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.appendChild(script);
     }
 
-    // Matrix Rain Effect - Professional Grid-Perfect Version
+    // Matrix Rain Effect
     let matrixAnimId = null;
     function initMatrix() {
         if (matrixAnimId) {
@@ -1162,7 +1156,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Client-Side SPA Router System
     function initRouter() {
-        // Intercept navigation links
         document.body.addEventListener('click', (e) => {
             const link = e.target.closest('a');
             if (!link) return;
@@ -1170,7 +1163,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const href = link.getAttribute('href');
             if (!href) return;
 
-            // Check if it's an external link, target blank, download, or asset
             if (
                 link.target === '_blank' || 
                 link.hasAttribute('download') || 
@@ -1181,13 +1173,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 href.startsWith('#') ||
                 href.endsWith('.pdf')
             ) {
-                // Let browser handle it
                 return;
             }
 
             e.preventDefault();
 
-            // Prevent fetching/routing if user is clicking a link to the current active page
             const currentFilename = window.location.pathname.split('/').pop() || 'index.html';
             const targetFilename = href.split('/').pop() || 'index.html';
             if (currentFilename === targetFilename) {
@@ -1197,7 +1187,6 @@ document.addEventListener('DOMContentLoaded', () => {
             navigateTo(href);
         });
 
-        // Intercept browser back/forward buttons
         window.addEventListener('popstate', () => {
             navigateTo(window.location.pathname, false);
         });
@@ -1214,8 +1203,6 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '30%';
         }
 
-        // Fetch first in the background. We ONLY fade out content once the fetch succeeds.
-        // This makes the transition feel incredibly fast and avoids showing a blank screen on slow lines.
         fetch(url)
             .then(response => {
                 if (!response.ok) throw new Error('Could not fetch path');
@@ -1231,38 +1218,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!newMain) throw new Error('Main element not found in path');
 
-                // Fade out current main content (0.3s)
                 mainContent.classList.remove('fade-in');
                 mainContent.classList.add('fade-out');
 
                 setTimeout(() => {
-                    // Update browser history
                     if (pushToHistory) {
                         history.pushState(null, '', url);
                     }
 
-                    // Update Title
                     if (newTitle) {
                         document.title = newTitle.innerText;
                     }
 
-                    // Swap main content
                     mainContent.innerHTML = newMain.innerHTML;
                     
-                    // Set styles of main container if needed
                     if (newMain.getAttribute('style')) {
                         mainContent.setAttribute('style', newMain.getAttribute('style'));
                     } else {
                         mainContent.removeAttribute('style');
                     }
 
-                    // Reset scroll to top
                     window.scrollTo({ top: 0, behavior: 'instant' });
 
-                    // Highlight navbar tab active state
                     updateActiveNavLink();
 
-                    // Animate progress bar completion
                     if (progressBar) {
                         progressBar.style.width = '100%';
                         setTimeout(() => {
@@ -1273,10 +1252,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         }, 300);
                     }
 
-                    // Re-run JavaScript logic for newly injected DOM
                     reinitializePageScripts();
 
-                    // Fade back in
                     mainContent.classList.remove('fade-out');
                     mainContent.classList.add('fade-in');
                 }, 300);
@@ -1304,16 +1281,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function reinitializePageScripts() {
-        // Clear matrix rain animation loops to prevent leaking memory
         if (matrixAnimId) {
             cancelAnimationFrame(matrixAnimId);
             matrixAnimId = null;
         }
 
-        // Initialize animations on the new components
         initFlyInObserver();
 
-        // Identify current file/page route
         const path = window.location.pathname.split('/').pop() || 'index.html';
 
         if (path === 'index.html' || path === '') {
