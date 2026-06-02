@@ -98,7 +98,18 @@
 
             <!-- GitHub Guestbook Section -->
             <div class="guestbook-section container">
-                <h2 class="guestbook-title">Guestbook</h2>
+                <h2 class="guestbook-title">
+                    Guestbook
+                    <span class="guestbook-info-icon" tabindex="0" aria-label="Guestbook Info">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="guestbook-tooltip">
+                            <strong>How the Guestbook works:</strong><br>
+                            This guestbook is powered by GitHub Issues. Posting a message automatically creates a secure comment on this repository's public issue tracker.<br><br>
+                            <strong>Why is a GitHub login required?</strong><br>
+                            To prevent spam and verify commentators, GitHub requires a secure login. Your post will display your verified GitHub username and profile picture.
+                        </span>
+                    </span>
+                </h2>
                 <p class="guestbook-subtitle">Leave a message, sign the guestbook, or say hi! (Powered by GitHub Issues)</p>
                 <div id="utterances-container"></div>
             </div>

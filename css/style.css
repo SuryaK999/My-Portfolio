@@ -1895,6 +1895,92 @@ body.terminal-maximized .header {
     margin-bottom: 0.8rem;
     color: var(--text-white);
     letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Guestbook Information Icon & Tooltip */
+.guestbook-info-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-left: 15px;
+    vertical-align: middle;
+    transition: var(--transition);
+}
+
+.guestbook-info-icon:hover,
+.guestbook-info-icon:focus {
+    color: var(--primary-color);
+    filter: drop-shadow(0 0 8px var(--primary-glow));
+}
+
+.guestbook-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    width: 320px;
+    background: rgba(13, 13, 13, 0.98);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 15px var(--primary-dim);
+    color: var(--text-white);
+    padding: 1.2rem;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    font-weight: 400;
+    text-align: left;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    z-index: 1000;
+    text-transform: none;
+}
+
+/* Tooltip Arrow */
+.guestbook-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: var(--primary-color) transparent transparent transparent;
+}
+
+/* Show Tooltip on Hover, Focus, or Active */
+.guestbook-info-icon:hover .guestbook-tooltip,
+.guestbook-info-icon:focus .guestbook-tooltip,
+.guestbook-info-icon:active .guestbook-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 768px) {
+    .guestbook-tooltip {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        transform: translateY(10px);
+    }
+    .guestbook-info-icon:hover .guestbook-tooltip,
+    .guestbook-info-icon:focus .guestbook-tooltip,
+    .guestbook-info-icon:active .guestbook-tooltip {
+        transform: translateY(0);
+    }
 }
 
 .guestbook-subtitle {
