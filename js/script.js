@@ -403,10 +403,90 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTerminalMaximized = false;
     let terminalOriginalStyle = {};
     let isTypingTerminal = false;
+    let hasDraggedDock = false; // Prevent clicks immediately after dragging dock handle
+
+    function saveTerminalState() {
+        const overlay = document.getElementById('terminalOverlay');
+        const dock = document.getElementById('terminalDock');
+        const launcher = document.getElementById('terminalLauncher');
+        if (!overlay || !dock || !launcher) return;
+
+        let state = 'closed';
+        if (!overlay.classList.contains('hidden')) {
+            state = 'open';
+        } else if (!dock.classList.contains('hidden')) {
+            state = 'docked';
+        }
+
+        sessionStorage.setItem('terminal_state', state);
+        sessionStorage.setItem('terminal_x', overlay.style.left || '');
+        sessionStorage.setItem('terminal_y', overlay.style.top || '');
+        sessionStorage.setItem('terminal_dock_side', dock.classList.contains('left') ? 'left' : 'right');
+        sessionStorage.setItem('terminal_dock_y', dock.style.top || '');
+        sessionStorage.setItem('terminal_maximized', isTerminalMaximized ? 'true' : 'false');
+
+        // Save pre-maximized styles
+        sessionStorage.setItem('terminal_orig_top', terminalOriginalStyle.top || '');
+        sessionStorage.setItem('terminal_orig_left', terminalOriginalStyle.left || '');
+        sessionStorage.setItem('terminal_orig_width', terminalOriginalStyle.width || '');
+        sessionStorage.setItem('terminal_orig_height', terminalOriginalStyle.height || '');
+        sessionStorage.setItem('terminal_orig_bottom', terminalOriginalStyle.bottom || '');
+        sessionStorage.setItem('terminal_orig_right', terminalOriginalStyle.right || '');
+        sessionStorage.setItem('terminal_orig_radius', terminalOriginalStyle.borderRadius || '');
+    }
+
+    function restoreTerminalState() {
+        const launcher = document.getElementById('terminalLauncher');
+        const overlay = document.getElementById('terminalOverlay');
+        const dock = document.getElementById('terminalDock');
+        const body = document.getElementById('terminalBody');
+        const input = document.getElementById('terminalInput');
+
+        if (!overlay || !dock || !launcher) return;
+
+        const state = sessionStorage.getItem('terminal_state') || 'closed';
+        const x = sessionStorage.getItem('terminal_x');
+        const y = sessionStorage.getItem('terminal_y');
+        const dockSide = sessionStorage.getItem('terminal_dock_side') || 'right';
+        const dockY = sessionStorage.getItem('terminal_dock_y');
+        const maxState = sessionStorage.getItem('terminal_maximized') === 'true';
+
+        // Reset visibility
+        launcher.classList.remove('hidden');
+        overlay.classList.add('hidden');
+        dock.classList.add('hidden');
+
+        // Restore layout coordinates
+        if (x) overlay.style.left = x;
+        if (y) overlay.style.top = y;
+        overlay.style.bottom = 'auto';
+        overlay.style.right = 'auto';
+
+        if (state === 'open') {
+            launcher.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            if (maxState) {
+                isTerminalMaximized = false;
+                toggleTerminalMaximize(overlay, body);
+            }
+            if (input) input.focus();
+        } else if (state === 'docked') {
+            launcher.classList.add('hidden');
+            dock.classList.remove('hidden');
+            dock.classList.remove('left', 'right');
+            dock.classList.add(dockSide);
+            if (dockY) dock.style.top = dockY;
+        } else {
+            launcher.classList.remove('hidden');
+            overlay.classList.add('hidden');
+            dock.classList.add('hidden');
+        }
+    }
 
     function initTerminal() {
         const launcher = document.getElementById('terminalLauncher');
         const overlay = document.getElementById('terminalOverlay');
+        const dock = document.getElementById('terminalDock');
         const closeBtn = document.getElementById('terminalClose');
         const minBtn = document.getElementById('terminalMin');
         const maxBtn = document.getElementById('terminalMax');
@@ -414,39 +494,112 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = document.getElementById('terminalBody');
         const header = document.getElementById('terminalHeader');
 
-        if (!launcher || !overlay) return;
+        if (!launcher || !overlay || !dock) return;
 
         // Reset state
-        isTerminalMaximized = false;
-        terminalOriginalStyle = {};
         isTypingTerminal = false;
+
+        // Restore saved states from sessionStorage (if any)
+        restoreTerminalState();
 
         // Toggle terminal open
         launcher.onclick = () => {
-            overlay.classList.toggle('hidden');
-            if (!overlay.classList.contains('hidden')) {
-                input.focus();
-            }
+            overlay.classList.remove('hidden');
+            launcher.classList.add('hidden');
+            overlay.style.bottom = '100px';
+            overlay.style.right = '30px';
+            overlay.style.top = 'auto';
+            overlay.style.left = 'auto';
+            isTerminalMaximized = false;
+            overlay.style.borderRadius = '12px';
+            overlay.style.width = '480px';
+            overlay.style.height = '350px';
+            body.classList.remove('hidden');
+            input.focus();
+            saveTerminalState();
         };
 
-        // Close terminal
-        closeBtn.onclick = () => {
+        // Close terminal -> Dock to the side edge
+        const closeTerminal = () => {
+            const rect = overlay.getBoundingClientRect();
+            const isLeft = (rect.left + rect.width / 2) < window.innerWidth / 2;
+            const side = isLeft ? 'left' : 'right';
+
             overlay.classList.add('hidden');
+            launcher.classList.add('hidden');
+            
+            dock.classList.remove('left', 'right', 'hidden');
+            dock.classList.add(side);
+
+            // Put dock handle at same vertical coordinate
+            const docY = Math.max(0, Math.min(rect.top, window.innerHeight - 50));
+            dock.style.top = docY + 'px';
+
+            saveTerminalState();
         };
 
-        // Minimize terminal body only
-        minBtn.onclick = () => {
+        const toggleMinimize = () => {
             body.classList.toggle('hidden');
             if (body.classList.contains('hidden')) {
                 overlay.style.height = 'auto';
             } else {
                 overlay.style.height = isTerminalMaximized ? '100vh' : '350px';
             }
+            saveTerminalState();
         };
 
-        // Maximize terminal window
-        maxBtn.onclick = () => {
+        const toggleMaximize = () => {
             toggleTerminalMaximize(overlay, body);
+            saveTerminalState();
+        };
+
+        // Click dock handle -> Open terminal adjacent to handle
+        dock.onclick = (e) => {
+            if (hasDraggedDock) {
+                hasDraggedDock = false; // Drag event locked the click
+                return;
+            }
+            dock.classList.add('hidden');
+            overlay.classList.remove('hidden');
+            launcher.classList.add('hidden');
+
+            const isLeft = dock.classList.contains('left');
+            overlay.style.top = dock.style.top;
+            
+            if (isLeft) {
+                overlay.style.left = '20px';
+            } else {
+                overlay.style.left = (window.innerWidth - overlay.offsetWidth - 20) + 'px';
+            }
+            overlay.style.bottom = 'auto';
+            overlay.style.right = 'auto';
+
+            saveTerminalState();
+            input.focus();
+        };
+
+        // Isolate dot controls from dragging mechanics by blocking bubbling events
+        const preventBubbling = (e) => e.stopPropagation();
+        ['mousedown', 'touchstart', 'click'].forEach(evt => {
+            closeBtn.addEventListener(evt, preventBubbling);
+            minBtn.addEventListener(evt, preventBubbling);
+            maxBtn.addEventListener(evt, preventBubbling);
+        });
+
+        // Close, Minimize, Maximize dot button bindings
+        closeBtn.onclick = (e) => {
+            e.preventDefault();
+            closeTerminal();
+        };
+
+        minBtn.onclick = (e) => {
+            e.preventDefault();
+            toggleMinimize();
+        };
+
+        maxBtn.onclick = (e) => {
+            e.preventDefault();
+            toggleMaximize();
         };
 
         // Auto-focus terminal input on body clicks
@@ -456,8 +609,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Setup Draggable
+        // Setup Drag listeners
         makeTerminalDraggable(header, overlay);
+        makeDockDraggable(dock, overlay);
 
         // Input Submission
         input.onkeydown = async (e) => {
@@ -470,7 +624,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 printTerminalLineInstant(`<span class="prompt">visitor@surya-portfolio:~$</span> ${escapeTerminalHTML(cmd)}`);
 
                 if (cmd !== '') {
-                    await handleTerminalCommand(cmd.toLowerCase());
+                    if (cmd.toLowerCase() === 'exit') {
+                        closeTerminal();
+                    } else {
+                        await handleTerminalCommand(cmd.toLowerCase());
+                    }
                 } else {
                     printTerminalLineInstant('');
                 }
@@ -499,12 +657,20 @@ document.addEventListener('DOMContentLoaded', () => {
             body.classList.remove('hidden');
             isTerminalMaximized = true;
         } else {
-            overlay.style.top = terminalOriginalStyle.top || '';
-            overlay.style.left = terminalOriginalStyle.left || '';
-            overlay.style.width = terminalOriginalStyle.width || '';
-            overlay.style.height = terminalOriginalStyle.height || '';
-            overlay.style.bottom = terminalOriginalStyle.bottom || '';
-            overlay.style.right = terminalOriginalStyle.right || '';
+            // Restore from saved memory/sessionState values
+            const origTop = terminalOriginalStyle.top || sessionStorage.getItem('terminal_orig_top') || '';
+            const origLeft = terminalOriginalStyle.left || sessionStorage.getItem('terminal_orig_left') || '';
+            const origWidth = terminalOriginalStyle.width || sessionStorage.getItem('terminal_orig_width') || '';
+            const origHeight = terminalOriginalStyle.height || sessionStorage.getItem('terminal_orig_height') || '';
+            const origBottom = terminalOriginalStyle.bottom || sessionStorage.getItem('terminal_orig_bottom') || '';
+            const origRight = terminalOriginalStyle.right || sessionStorage.getItem('terminal_orig_right') || '';
+            
+            overlay.style.top = origTop;
+            overlay.style.left = origLeft;
+            overlay.style.width = origWidth || '480px';
+            overlay.style.height = origHeight || '350px';
+            overlay.style.bottom = origBottom;
+            overlay.style.right = origRight;
             overlay.style.borderRadius = '12px';
             isTerminalMaximized = false;
         }
@@ -580,12 +746,77 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.style.right = "auto";
         }
 
-        // Cleanup events
+        // Cleanup events and save coordinates
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
             document.ontouchend = null;
             document.ontouchmove = null;
+            saveTerminalState();
+        }
+    }
+
+    // Android-style vertical edge dragging for collapsed handle
+    function makeDockDraggable(dock, overlay) {
+        let posY = 0, posY2 = 0;
+        dock.onmousedown = dragMouseDown;
+        dock.ontouchstart = dragTouchStart;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            posY2 = e.clientY;
+            hasDraggedDock = false;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function dragTouchStart(e) {
+            posY2 = e.touches[0].clientY;
+            hasDraggedDock = false;
+            document.ontouchend = closeDragElement;
+            document.ontouchmove = elementTouchDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            posY = posY2 - e.clientY;
+            posY2 = e.clientY;
+
+            if (Math.abs(posY) > 1) {
+                hasDraggedDock = true;
+            }
+
+            let newTop = dock.offsetTop - posY;
+            const maxTop = window.innerHeight - dock.offsetHeight;
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            dock.style.top = newTop + "px";
+        }
+
+        function elementTouchDrag(e) {
+            posY = posY2 - e.touches[0].clientY;
+            posY2 = e.touches[0].clientY;
+
+            if (Math.abs(posY) > 1) {
+                hasDraggedDock = true;
+            }
+
+            let newTop = dock.offsetTop - posY;
+            const maxTop = window.innerHeight - dock.offsetHeight;
+            newTop = Math.max(0, Math.min(newTop, maxTop));
+
+            dock.style.top = newTop + "px";
+        }
+
+        // Cleanup events and save state
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.ontouchend = null;
+            document.ontouchmove = null;
+            saveTerminalState();
         }
     }
 
