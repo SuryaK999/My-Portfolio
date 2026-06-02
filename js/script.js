@@ -403,26 +403,48 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTerminalMaximized = false;
     let terminalOriginalStyle = {};
     let isTypingTerminal = false;
-    let hasDraggedDock = false; // Prevent clicks immediately after dragging dock handle
+    let hasDraggedDock = false; // Prevent clicks immediately after dragging bubble
+
+    let autoHideTimeout = null;
+
+    function scheduleAutoHide() {
+        clearTimeout(autoHideTimeout);
+        autoHideTimeout = setTimeout(() => {
+            const bubble = document.getElementById('terminalBubble');
+            if (bubble && !bubble.classList.contains('hidden')) {
+                if (bubble.classList.contains('docked-left') || bubble.classList.contains('docked-right')) {
+                    bubble.classList.add('auto-hidden');
+                }
+            }
+        }, 3000);
+    }
+
+    function clearAutoHide() {
+        clearTimeout(autoHideTimeout);
+        const bubble = document.getElementById('terminalBubble');
+        if (bubble) {
+            bubble.classList.remove('auto-hidden');
+        }
+    }
 
     function saveTerminalState() {
         const overlay = document.getElementById('terminalOverlay');
-        const dock = document.getElementById('terminalDock');
+        const bubble = document.getElementById('terminalBubble');
         const launcher = document.getElementById('terminalLauncher');
-        if (!overlay || !dock || !launcher) return;
+        if (!overlay || !bubble || !launcher) return;
 
         let state = 'closed';
         if (!overlay.classList.contains('hidden')) {
             state = 'open';
-        } else if (!dock.classList.contains('hidden')) {
+        } else if (!bubble.classList.contains('hidden')) {
             state = 'docked';
         }
 
         sessionStorage.setItem('terminal_state', state);
         sessionStorage.setItem('terminal_x', overlay.style.left || '');
         sessionStorage.setItem('terminal_y', overlay.style.top || '');
-        sessionStorage.setItem('terminal_dock_side', dock.classList.contains('left') ? 'left' : 'right');
-        sessionStorage.setItem('terminal_dock_y', dock.style.top || '');
+        sessionStorage.setItem('terminal_dock_side', bubble.classList.contains('docked-left') ? 'left' : 'right');
+        sessionStorage.setItem('terminal_dock_y', bubble.style.top || '');
         sessionStorage.setItem('terminal_maximized', isTerminalMaximized ? 'true' : 'false');
 
         // Save pre-maximized styles
@@ -438,11 +460,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function restoreTerminalState() {
         const launcher = document.getElementById('terminalLauncher');
         const overlay = document.getElementById('terminalOverlay');
-        const dock = document.getElementById('terminalDock');
+        const bubble = document.getElementById('terminalBubble');
         const body = document.getElementById('terminalBody');
         const input = document.getElementById('terminalInput');
 
-        if (!overlay || !dock || !launcher) return;
+        if (!overlay || !bubble || !launcher) return;
 
         const state = sessionStorage.getItem('terminal_state') || 'closed';
         const x = sessionStorage.getItem('terminal_x');
@@ -454,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset visibility
         launcher.classList.remove('hidden');
         overlay.classList.add('hidden');
-        dock.classList.add('hidden');
+        bubble.classList.add('hidden');
 
         // Restore layout coordinates
         if (x) overlay.style.left = x;
@@ -472,21 +494,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (input) input.focus();
         } else if (state === 'docked') {
             launcher.classList.add('hidden');
-            dock.classList.remove('hidden');
-            dock.classList.remove('left', 'right');
-            dock.classList.add(dockSide);
-            if (dockY) dock.style.top = dockY;
+            bubble.classList.remove('hidden');
+            bubble.classList.remove('docked-left', 'docked-right');
+            bubble.classList.add(`docked-${dockSide}`);
+            if (dockY) bubble.style.top = dockY;
+            if (dockSide === 'left') {
+                bubble.style.left = '0';
+            } else {
+                bubble.style.left = (window.innerWidth - 50) + 'px';
+            }
+            scheduleAutoHide();
         } else {
             launcher.classList.remove('hidden');
             overlay.classList.add('hidden');
-            dock.classList.add('hidden');
+            bubble.classList.add('hidden');
         }
     }
 
     function initTerminal() {
         const launcher = document.getElementById('terminalLauncher');
         const overlay = document.getElementById('terminalOverlay');
-        const dock = document.getElementById('terminalDock');
+        const bubble = document.getElementById('terminalBubble');
         const closeBtn = document.getElementById('terminalClose');
         const minBtn = document.getElementById('terminalMin');
         const maxBtn = document.getElementById('terminalMax');
@@ -494,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = document.getElementById('terminalBody');
         const header = document.getElementById('terminalHeader');
 
-        if (!launcher || !overlay || !dock) return;
+        if (!launcher || !overlay || !bubble) return;
 
         // Reset state
         isTypingTerminal = false;
@@ -519,33 +547,120 @@ document.addEventListener('DOMContentLoaded', () => {
             saveTerminalState();
         };
 
-        // Close terminal -> Dock to the side edge
+        // Close terminal completely (launcher reset)
         const closeTerminal = () => {
-            const rect = overlay.getBoundingClientRect();
-            const isLeft = (rect.left + rect.width / 2) < window.innerWidth / 2;
-            const side = isLeft ? 'left' : 'right';
-
             overlay.classList.add('hidden');
-            launcher.classList.add('hidden');
-            
-            dock.classList.remove('left', 'right', 'hidden');
-            dock.classList.add(side);
-
-            // Put dock handle at same vertical coordinate
-            const docY = Math.max(0, Math.min(rect.top, window.innerHeight - 50));
-            dock.style.top = docY + 'px';
-
+            bubble.classList.add('hidden');
+            launcher.classList.remove('hidden');
+            clearAutoHide();
             saveTerminalState();
         };
 
-        const toggleMinimize = () => {
-            body.classList.toggle('hidden');
-            if (body.classList.contains('hidden')) {
-                overlay.style.height = 'auto';
+        // Minimize terminal into bubble (chat-head grow animation from click cursor)
+        const minimizeTerminal = (x, y) => {
+            const rect = overlay.getBoundingClientRect();
+            
+            // 1. Shrink and fade overlay to the click location
+            overlay.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease';
+            overlay.style.transformOrigin = `${x - rect.left}px ${y - rect.top}px`;
+            overlay.style.transform = 'scale(0.05)';
+            overlay.style.opacity = '0';
+
+            // 2. Simultaneously display the bubble at click coordinate
+            bubble.classList.remove('hidden', 'docked-left', 'docked-right', 'auto-hidden');
+            bubble.style.transition = 'none';
+            bubble.style.left = (x - 25) + 'px';
+            bubble.style.top = (y - 25) + 'px';
+            
+            // Force reflow
+            void bubble.offsetWidth;
+
+            // 3. Animate snap sliding to closest side immediately
+            const isLeft = x < window.innerWidth / 2;
+            const side = isLeft ? 'left' : 'right';
+            const targetY = Math.max(0, Math.min(y - 25, window.innerHeight - 50));
+
+            bubble.style.transition = 'left 0.4s cubic-bezier(0.25, 1, 0.5, 1), right 0.4s cubic-bezier(0.25, 1, 0.5, 1), top 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+            bubble.style.top = targetY + 'px';
+            if (side === 'left') {
+                bubble.style.left = '0px';
             } else {
-                overlay.style.height = isTerminalMaximized ? '100vh' : '350px';
+                bubble.style.left = (window.innerWidth - 50) + 'px';
             }
-            saveTerminalState();
+
+            setTimeout(() => {
+                // Complete minimize
+                overlay.classList.add('hidden');
+                overlay.style.transform = '';
+                overlay.style.opacity = '';
+                overlay.style.transformOrigin = '';
+                overlay.style.transition = '';
+
+                bubble.style.transition = '';
+                bubble.classList.add(`docked-${side}`);
+                bubble.classList.add('snap-bounce');
+
+                setTimeout(() => {
+                    bubble.classList.remove('snap-bounce');
+                }, 500);
+
+                saveTerminalState();
+                scheduleAutoHide();
+            }, 400);
+        };
+
+        const restoreTerminalFromBubble = () => {
+            clearAutoHide();
+
+            const bubbleRect = bubble.getBoundingClientRect();
+            const side = bubble.classList.contains('docked-left') ? 'left' : 'right';
+
+            // Hide bubble and setup expand
+            bubble.classList.add('hidden');
+            bubble.classList.remove('docked-left', 'docked-right', 'auto-hidden');
+
+            overlay.style.transition = 'none';
+            overlay.classList.remove('hidden');
+
+            const overlayWidth = 480;
+            const overlayHeight = 350;
+            let targetLeft = 20;
+            if (side === 'right') {
+                targetLeft = window.innerWidth - overlayWidth - 20;
+            }
+            const targetTop = Math.max(10, Math.min(bubbleRect.top, window.innerHeight - overlayHeight - 10));
+
+            overlay.style.left = targetLeft + 'px';
+            overlay.style.top = targetTop + 'px';
+            overlay.style.bottom = 'auto';
+            overlay.style.right = 'auto';
+            overlay.style.width = overlayWidth + 'px';
+            overlay.style.height = overlayHeight + 'px';
+            overlay.style.borderRadius = '12px';
+
+            // Setup origin towards bubble center
+            const originX = side === 'left' ? 0 : overlayWidth;
+            const originY = bubbleRect.top - targetTop + 25;
+            overlay.style.transformOrigin = `${originX}px ${originY}px`;
+            overlay.style.transform = 'scale(0.05)';
+            overlay.style.opacity = '0';
+
+            // Force reflow
+            void overlay.offsetWidth;
+
+            // Expand animation
+            overlay.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease';
+            overlay.style.transform = 'scale(1)';
+            overlay.style.opacity = '1';
+
+            setTimeout(() => {
+                overlay.style.transition = '';
+                overlay.style.transformOrigin = '';
+                overlay.style.transform = '';
+                overlay.style.opacity = '';
+                input.focus();
+                saveTerminalState();
+            }, 400);
         };
 
         const toggleMaximize = () => {
@@ -553,30 +668,23 @@ document.addEventListener('DOMContentLoaded', () => {
             saveTerminalState();
         };
 
-        // Click dock handle -> Open terminal adjacent to handle
-        dock.onclick = (e) => {
+        // Tap bubble to expand terminal
+        bubble.onclick = (e) => {
             if (hasDraggedDock) {
-                hasDraggedDock = false; // Drag event locked the click
+                hasDraggedDock = false; // Drag event locked click
                 return;
             }
-            dock.classList.add('hidden');
-            overlay.classList.remove('hidden');
-            launcher.classList.add('hidden');
-
-            const isLeft = dock.classList.contains('left');
-            overlay.style.top = dock.style.top;
-            
-            if (isLeft) {
-                overlay.style.left = '20px';
-            } else {
-                overlay.style.left = (window.innerWidth - overlay.offsetWidth - 20) + 'px';
-            }
-            overlay.style.bottom = 'auto';
-            overlay.style.right = 'auto';
-
-            saveTerminalState();
-            input.focus();
+            restoreTerminalFromBubble();
         };
+
+        // Hover listeners for collapsed edge handles
+        bubble.addEventListener('mouseenter', () => {
+            clearAutoHide();
+        });
+
+        bubble.addEventListener('mouseleave', () => {
+            scheduleAutoHide();
+        });
 
         // Isolate dot controls from dragging mechanics by blocking bubbling events
         const preventBubbling = (e) => e.stopPropagation();
@@ -594,7 +702,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         minBtn.onclick = (e) => {
             e.preventDefault();
-            toggleMinimize();
+            const clickX = e.clientX || window.innerWidth / 2;
+            const clickY = e.clientY || window.innerHeight / 2;
+            minimizeTerminal(clickX, clickY);
         };
 
         maxBtn.onclick = (e) => {
@@ -611,7 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Setup Drag listeners
         makeTerminalDraggable(header, overlay);
-        makeDockDraggable(dock, overlay);
+        makeBubbleDraggable(bubble, overlay);
 
         // Input Submission
         input.onkeydown = async (e) => {
@@ -756,24 +866,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Android-style vertical edge dragging for collapsed handle
-    function makeDockDraggable(dock, overlay) {
-        let posY = 0, posY2 = 0;
-        dock.onmousedown = dragMouseDown;
-        dock.ontouchstart = dragTouchStart;
+    function makeBubbleDraggable(bubble, overlay) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        bubble.onmousedown = dragMouseDown;
+        bubble.ontouchstart = dragTouchStart;
 
         function dragMouseDown(e) {
             e = e || window.event;
             e.preventDefault();
-            posY2 = e.clientY;
+            
+            // Clear hover/auto-hide timers during drag
+            clearAutoHide();
+            bubble.classList.remove('docked-left', 'docked-right', 'auto-hidden');
+            
+            pos3 = e.clientX;
+            pos4 = e.clientY;
             hasDraggedDock = false;
+            
+            // Disable transition for real-time response
+            bubble.style.transition = 'none';
+            
             document.onmouseup = closeDragElement;
             document.onmousemove = elementDrag;
         }
 
         function dragTouchStart(e) {
-            posY2 = e.touches[0].clientY;
+            clearAutoHide();
+            bubble.classList.remove('docked-left', 'docked-right', 'auto-hidden');
+            
+            pos3 = e.touches[0].clientX;
+            pos4 = e.touches[0].clientY;
             hasDraggedDock = false;
+            
+            bubble.style.transition = 'none';
+            
             document.ontouchend = closeDragElement;
             document.ontouchmove = elementTouchDrag;
         }
@@ -781,42 +907,88 @@ document.addEventListener('DOMContentLoaded', () => {
         function elementDrag(e) {
             e = e || window.event;
             e.preventDefault();
-            posY = posY2 - e.clientY;
-            posY2 = e.clientY;
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
 
-            if (Math.abs(posY) > 1) {
+            if (Math.abs(pos1) > 1 || Math.abs(pos2) > 1) {
                 hasDraggedDock = true;
             }
 
-            let newTop = dock.offsetTop - posY;
-            const maxTop = window.innerHeight - dock.offsetHeight;
+            let newTop = bubble.offsetTop - pos2;
+            let newLeft = bubble.offsetLeft - pos1;
+
+            // Restrict bounds
+            const maxLeft = window.innerWidth - bubble.offsetWidth;
+            const maxTop = window.innerHeight - bubble.offsetHeight;
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
             newTop = Math.max(0, Math.min(newTop, maxTop));
 
-            dock.style.top = newTop + "px";
+            bubble.style.top = newTop + "px";
+            bubble.style.left = newLeft + "px";
         }
 
         function elementTouchDrag(e) {
-            posY = posY2 - e.touches[0].clientY;
-            posY2 = e.touches[0].clientY;
+            pos1 = pos3 - e.touches[0].clientX;
+            pos2 = pos4 - e.touches[0].clientY;
+            pos3 = e.touches[0].clientX;
+            pos4 = e.touches[0].clientY;
 
-            if (Math.abs(posY) > 1) {
+            if (Math.abs(pos1) > 1 || Math.abs(pos2) > 1) {
                 hasDraggedDock = true;
             }
 
-            let newTop = dock.offsetTop - posY;
-            const maxTop = window.innerHeight - dock.offsetHeight;
+            let newTop = bubble.offsetTop - pos2;
+            let newLeft = bubble.offsetLeft - pos1;
+
+            const maxLeft = window.innerWidth - bubble.offsetWidth;
+            const maxTop = window.innerHeight - bubble.offsetHeight;
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
             newTop = Math.max(0, Math.min(newTop, maxTop));
 
-            dock.style.top = newTop + "px";
+            bubble.style.top = newTop + "px";
+            bubble.style.left = newLeft + "px";
         }
 
-        // Cleanup events and save state
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
             document.ontouchend = null;
             document.ontouchmove = null;
-            saveTerminalState();
+
+            // Re-enable CSS transitions
+            bubble.style.transition = '';
+
+            // Magnetic snap to nearest edge
+            const isLeft = (bubble.offsetLeft + bubble.offsetWidth / 2) < window.innerWidth / 2;
+            const side = isLeft ? 'left' : 'right';
+            const targetY = Math.max(0, Math.min(bubble.offsetTop, window.innerHeight - bubble.offsetHeight));
+
+            // Smooth slide to edge position
+            bubble.style.transition = 'left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            bubble.style.top = targetY + 'px';
+            if (side === 'left') {
+                bubble.style.left = '0px';
+            } else {
+                bubble.style.left = (window.innerWidth - bubble.offsetWidth) + 'px';
+            }
+
+            setTimeout(() => {
+                bubble.style.transition = '';
+                // Add docking classes and trigger snap-bounce physical animation
+                bubble.classList.add(`docked-${side}`);
+                bubble.classList.add('snap-bounce');
+                
+                // Remove snap-bounce class after animation finishes (500ms)
+                setTimeout(() => {
+                    bubble.classList.remove('snap-bounce');
+                }, 500);
+
+                // Save new state & start auto-hide timer
+                saveTerminalState();
+                scheduleAutoHide();
+            }, 300);
         }
     }
 
