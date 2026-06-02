@@ -1575,8 +1575,15 @@ main.fade-out {
 
 main.fade-in {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
     transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Hide header when terminal is maximized */
+body.terminal-maximized .header {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease;
 }
 
 /* DRAGGABLE TERMINAL CLI WINDOW SYSTEM */
@@ -1976,7 +1983,7 @@ main.fade-in {
 }
 
 .terminal-bubble.docked-left.auto-hidden {
-    transform: translateX(-55%);
+    transform: translateX(-52%);
 }
 
 .terminal-bubble.docked-left.auto-hidden:hover {
@@ -1994,7 +2001,7 @@ main.fade-in {
 }
 
 .terminal-bubble.docked-right.auto-hidden {
-    transform: translateX(55%);
+    transform: translateX(52%);
 }
 
 .terminal-bubble.docked-right.auto-hidden:hover {

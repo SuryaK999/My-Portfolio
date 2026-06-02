@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMatrixHeadColor = localStorage.getItem('matrix_head_color') || '#b3ffd1';
     let isMatrixRGB = localStorage.getItem('matrix_rgb') === 'true';
 
+    // Command History & Autocomplete State
+    let commandHistory = JSON.parse(sessionStorage.getItem('terminal_history') || '[]');
+    let historyIndex = commandHistory.length;
+    let tempInput = '';
+    const availableCommands = ['about', 'skills', 'projects', 'contact', 'theme', 'matrixcolor', 'clear', 'exit', 'help'];
+
     const savedTheme = localStorage.getItem('terminal_theme') || 'matrix';
     applyTheme(savedTheme);
 
@@ -601,12 +607,14 @@ document.addEventListener('DOMContentLoaded', () => {
             bubble.classList.add('hidden');
             launcher.classList.remove('hidden');
             clearAutoHide();
+            document.body.classList.remove('terminal-maximized');
             saveTerminalState();
         };
 
         // Minimize terminal into bubble (chat-head grow animation from click cursor)
         const minimizeTerminal = (x, y) => {
             const rect = overlay.getBoundingClientRect();
+            document.body.classList.remove('terminal-maximized');
             
             // 1. Shrink and fade overlay to the click location
             overlay.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease';
@@ -778,6 +786,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cmd = input.value.trim();
                 input.value = '';
 
+                // Store in history
+                if (cmd !== '') {
+                    if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== cmd) {
+                        commandHistory.push(cmd);
+                        sessionStorage.setItem('terminal_history', JSON.stringify(commandHistory));
+                    }
+                    historyIndex = commandHistory.length;
+                    tempInput = '';
+                }
+
                 // Print the prompt and typed command
                 printTerminalLineInstant(`<span class="prompt">visitor@surya-portfolio:~$</span> ${escapeTerminalHTML(cmd)}`);
 
@@ -789,6 +807,70 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     printTerminalLineInstant('');
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistory.length > 0) {
+                    if (historyIndex === commandHistory.length) {
+                        tempInput = input.value;
+                    }
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        input.value = commandHistory[historyIndex];
+                        setTimeout(() => {
+                            input.selectionStart = input.selectionEnd = input.value.length;
+                        }, 0);
+                    }
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (commandHistory.length > 0) {
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        input.value = commandHistory[historyIndex];
+                        setTimeout(() => {
+                            input.selectionStart = input.selectionEnd = input.value.length;
+                        }, 0);
+                    } else if (historyIndex === commandHistory.length - 1) {
+                        historyIndex++;
+                        input.value = tempInput;
+                        setTimeout(() => {
+                            input.selectionStart = input.selectionEnd = input.value.length;
+                        }, 0);
+                    }
+                }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                const currentVal = input.value;
+                const trimmed = currentVal.trimStart();
+                const parts = trimmed.split(/\s+/);
+                if (parts.length === 1 && parts[0] !== '') {
+                    const prefix = parts[0].toLowerCase();
+                    const matches = availableCommands.filter(c => c.startsWith(prefix));
+                    if (matches.length > 0) {
+                        input.value = matches[0];
+                        if (matches[0] === 'theme' || matches[0] === 'matrixcolor') {
+                            input.value += ' ';
+                        }
+                    }
+                } else if (parts.length > 1) {
+                    const cmd = parts[0].toLowerCase();
+                    const argPrefix = parts[parts.length - 1].toLowerCase();
+                    if (cmd === 'theme') {
+                        const themes = ['matrix', 'cyberpunk', 'amber', 'dracula', 'red', 'blue'];
+                        const matches = themes.filter(t => t.startsWith(argPrefix));
+                        if (matches.length > 0) {
+                            parts[parts.length - 1] = matches[0];
+                            input.value = parts.join(' ');
+                        }
+                    } else if (cmd === 'matrixcolor' || cmd === 'matrix-color') {
+                        const colors = ['green', 'red', 'purple', 'pink', 'yellow', 'blue', 'orange', 'cyan', 'amber', 'white', 'rgb'];
+                        const matches = colors.filter(c => c.startsWith(argPrefix));
+                        if (matches.length > 0) {
+                            parts[parts.length - 1] = matches[0];
+                            input.value = parts.join(' ');
+                        }
+                    }
                 }
             }
         };
@@ -849,6 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.style.borderRadius = '0';
             body.classList.remove('hidden');
             isTerminalMaximized = true;
+            document.body.classList.add('terminal-maximized');
         } else {
             // Restore from saved memory/sessionState values
             const origTop = terminalOriginalStyle.top || sessionStorage.getItem('terminal_orig_top') || '';
@@ -866,6 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.style.right = origRight;
             overlay.style.borderRadius = '12px';
             isTerminalMaximized = false;
+            document.body.classList.remove('terminal-maximized');
         }
     }
 
@@ -1161,6 +1245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (clean === 'projects') {
             await printTerminalLine('Featured Projects:', true);
             await printTerminalLine('  * Realtime Study Room (Socket.io collaborative study hub)');
+            await printTerminalLine('  * Scribly Text Editor App (Feature-rich Python & CustomTkinter text editor)');
             await printTerminalLine('  * Tauri Focus App (Tray-utility timer app built in Rust & Svelte)');
             await printTerminalLine('  * Desktop Music Player (Electron-based music companion)');
             await printTerminalLine('  * Apple TV Web Clone (High-fidelity responsive front-end clone)');
@@ -1373,7 +1458,7 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '30%';
         }
 
-        fetch(url)
+        fetch(url, { cache: 'no-store' })
             .then(response => {
                 if (!response.ok) throw new Error('Could not fetch path');
                 if (progressBar) progressBar.style.width = '70%';
