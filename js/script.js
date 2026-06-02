@@ -394,8 +394,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Draggable Terminal CLI System
-    const BUBBLE_SIZE = 64;
-    const BUBBLE_RADIUS = 32;
+    const BUBBLE_FLOAT_SIZE = 60;
+    const BUBBLE_FLOAT_RADIUS = 30;
+    const BUBBLE_DOCK_WIDTH = 44;
+    const BUBBLE_DOCK_HEIGHT = 72;
     let isTerminalMaximized = false;
     let terminalOriginalStyle = {};
     let isTypingTerminal = false;
@@ -497,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dockSide === 'left') {
                 bubble.style.left = '0';
             } else {
-                bubble.style.left = (window.innerWidth - BUBBLE_SIZE) + 'px';
+                bubble.style.left = (window.innerWidth - BUBBLE_DOCK_WIDTH) + 'px';
             }
             scheduleAutoHide();
         } else {
@@ -565,8 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Simultaneously display the bubble at click coordinate
             bubble.classList.remove('hidden', 'docked-left', 'docked-right', 'auto-hidden');
             bubble.style.transition = 'none';
-            bubble.style.left = (x - BUBBLE_RADIUS) + 'px';
-            bubble.style.top = (y - BUBBLE_RADIUS) + 'px';
+            bubble.style.left = (x - BUBBLE_FLOAT_RADIUS) + 'px';
+            bubble.style.top = (y - BUBBLE_FLOAT_RADIUS) + 'px';
             
             // Force reflow
             void bubble.offsetWidth;
@@ -574,14 +576,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. Animate snap sliding to closest side immediately
             const isLeft = x < window.innerWidth / 2;
             const side = isLeft ? 'left' : 'right';
-            const targetY = Math.max(10, Math.min(y - BUBBLE_RADIUS, window.innerHeight - BUBBLE_SIZE - 10));
+            const targetY = Math.max(10, Math.min(y - BUBBLE_FLOAT_RADIUS, window.innerHeight - BUBBLE_DOCK_HEIGHT - 10));
 
             bubble.style.transition = 'left 0.4s cubic-bezier(0.19, 1, 0.22, 1), top 0.4s cubic-bezier(0.19, 1, 0.22, 1)';
             bubble.style.top = targetY + 'px';
             if (side === 'left') {
                 bubble.style.left = '0px';
             } else {
-                bubble.style.left = (window.innerWidth - BUBBLE_SIZE) + 'px';
+                bubble.style.left = (window.innerWidth - BUBBLE_DOCK_WIDTH) + 'px';
             }
 
             setTimeout(() => {
@@ -636,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Setup origin towards bubble center
             const originX = side === 'left' ? 0 : overlayWidth;
-            const originY = bubbleRect.top - targetTop + BUBBLE_RADIUS;
+            const originY = bubbleRect.top - targetTop + (BUBBLE_DOCK_HEIGHT / 2);
             overlay.style.transformOrigin = `${originX}px ${originY}px`;
             overlay.style.transform = 'scale(0.05)';
             overlay.style.opacity = '0';
@@ -875,15 +877,12 @@ document.addEventListener('DOMContentLoaded', () => {
             e = e || window.event;
             e.preventDefault();
             
-            // Clear hover/auto-hide timers during drag
             clearAutoHide();
             
-            // Get exact bounding rect to calculate offset and position without layout jumps
             const rect = bubble.getBoundingClientRect();
             bubble.style.left = rect.left + 'px';
             bubble.style.top = rect.top + 'px';
             
-            // Determine if starting docked or free
             const wasDocked = bubble.classList.contains('docked-left') || bubble.classList.contains('docked-right');
             dockSide = rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
             isLockedToSide = wasDocked;
@@ -896,7 +895,6 @@ document.addEventListener('DOMContentLoaded', () => {
             startTop = rect.top;
             hasDraggedDock = false;
             
-            // Scale up slightly and disable transitions for instant feedback
             bubble.style.transition = 'none';
             bubble.style.transform = 'scale(1.1)';
             
@@ -942,7 +940,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 hasDraggedDock = true;
             }
 
-            // Lock behavior: if snapped to side, horizontal pull must exceed 35px to detach
             if (isLockedToSide) {
                 if (dockSide === 'left') {
                     if (dx > 35) {
@@ -959,16 +956,18 @@ document.addEventListener('DOMContentLoaded', () => {
             let newTop = startTop + dy;
 
             if (isLockedToSide) {
-                newLeft = dockSide === 'left' ? 0 : (window.innerWidth - BUBBLE_SIZE);
+                newLeft = dockSide === 'left' ? 0 : (window.innerWidth - BUBBLE_DOCK_WIDTH);
             } else {
                 newLeft = startLeft + dx;
             }
 
-            // Boundaries
-            const maxLeft = window.innerWidth - BUBBLE_SIZE;
-            const maxTop = window.innerHeight - BUBBLE_SIZE;
+            const currentWidth = isLockedToSide ? BUBBLE_DOCK_WIDTH : BUBBLE_FLOAT_SIZE;
+            const currentHeight = isLockedToSide ? BUBBLE_DOCK_HEIGHT : BUBBLE_FLOAT_SIZE;
+
+            const maxLeft = window.innerWidth - currentWidth;
+            const maxTop = window.innerHeight - currentHeight;
             newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-            newTop = Math.max(10, Math.min(newTop, maxTop - 10)); // 10px spacing from screen top/bottom
+            newTop = Math.max(10, Math.min(newTop, maxTop - 10));
 
             bubble.style.left = newLeft + 'px';
             bubble.style.top = newTop + 'px';
@@ -999,13 +998,16 @@ document.addEventListener('DOMContentLoaded', () => {
             let newTop = startTop + dy;
 
             if (isLockedToSide) {
-                newLeft = dockSide === 'left' ? 0 : (window.innerWidth - BUBBLE_SIZE);
+                newLeft = dockSide === 'left' ? 0 : (window.innerWidth - BUBBLE_DOCK_WIDTH);
             } else {
                 newLeft = startLeft + dx;
             }
 
-            const maxLeft = window.innerWidth - BUBBLE_SIZE;
-            const maxTop = window.innerHeight - BUBBLE_SIZE;
+            const currentWidth = isLockedToSide ? BUBBLE_DOCK_WIDTH : BUBBLE_FLOAT_SIZE;
+            const currentHeight = isLockedToSide ? BUBBLE_DOCK_HEIGHT : BUBBLE_FLOAT_SIZE;
+
+            const maxLeft = window.innerWidth - currentWidth;
+            const maxTop = window.innerHeight - currentHeight;
             newLeft = Math.max(0, Math.min(newLeft, maxLeft));
             newTop = Math.max(10, Math.min(newTop, maxTop - 10));
 
@@ -1019,33 +1021,27 @@ document.addEventListener('DOMContentLoaded', () => {
             document.ontouchend = null;
             document.ontouchmove = null;
 
-            // Reset scale transform
             bubble.style.transform = '';
 
-            // Magnetic snap calculation
             const currentLeft = parseInt(bubble.style.left) || 0;
-            const isLeft = (currentLeft + BUBBLE_RADIUS) < window.innerWidth / 2;
+            const isLeft = (currentLeft + BUBBLE_FLOAT_RADIUS) < window.innerWidth / 2;
             const side = isLeft ? 'left' : 'right';
-            const targetX = isLeft ? 0 : (window.innerWidth - BUBBLE_SIZE);
-            const targetY = Math.max(10, Math.min(parseInt(bubble.style.top) || 0, window.innerHeight - BUBBLE_SIZE - 10));
+            const targetX = isLeft ? 0 : (window.innerWidth - BUBBLE_DOCK_WIDTH);
+            const targetY = Math.max(10, Math.min(parseInt(bubble.style.top) || 0, window.innerHeight - BUBBLE_DOCK_HEIGHT - 10));
 
-            // Smooth slide snap transition using GPU friendly cubic bezier curve
             bubble.style.transition = 'left 0.4s cubic-bezier(0.19, 1, 0.22, 1), top 0.4s cubic-bezier(0.19, 1, 0.22, 1)';
             bubble.style.top = targetY + 'px';
             bubble.style.left = targetX + 'px';
 
             setTimeout(() => {
                 bubble.style.transition = '';
-                // Add docking classes and trigger snap-bounce physical animation
                 bubble.classList.add(`docked-${side}`);
                 bubble.classList.add('snap-bounce');
                 
-                // Remove snap-bounce class after animation finishes (500ms)
                 setTimeout(() => {
                     bubble.classList.remove('snap-bounce');
                 }, 500);
 
-                // Save new state & start auto-hide timer
                 saveTerminalState();
                 scheduleAutoHide();
             }, 400);
