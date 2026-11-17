@@ -1239,8 +1239,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await printTerminalLine('Surya Prakash Kudupudi is a B.Sc Computer Science graduate (2026) and a MERN stack & Python developer with hands-on experience in full-stack web and desktop applications. He has interned at Adhoc Network Tech, building REST APIs and responsive UIs using MERN. His key projects include a real-time collaborative academic workspace (MERN + Socket.IO + Firebase), a Tauri-based system tray focus app, an Electron.js music player, and a Python GUI text editor. He holds Cisco Python Essentials certifications, is proficient in Telugu and English, and is immediately available for full-time, internship, remote, or on-site roles.');
         } else if (clean === 'skills') {
             await printTerminalLine('Technical Skillset:', true);
-            await printTerminalLine('  Languages: Python, Java, JavaScript, Rust');
-            await printTerminalLine('  Web Tech:  Svelte 5, Node.js, SQLite, HTML5, CSS3');
+            await printTerminalLine('  Languages: Python, JavaScript');
+            await printTerminalLine('  Web Tech:  React, Svelte 5, Node.js, SQLite, HTML5, CSS3');
             await printTerminalLine('  Tools:     VS Code, Tauri, Electron, Git/GitHub, Vercel');
         } else if (clean === 'projects') {
             await printTerminalLine('Featured Projects:', true);
